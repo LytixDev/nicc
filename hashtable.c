@@ -23,9 +23,9 @@
 #include "hashtable.h"
 
 
-static int32_t hasher(const void *key, size_t key_size, size_t upper_bound)
+static size_t hasher(const void *key, size_t key_size, size_t upper_bound)
 {
-    int32_t hash = 0;
+    size_t hash = 0;
 
     for (size_t i = 0; i < key_size; i++)
 	hash += (hash << 5) + ((int8_t *)key)[i];
@@ -94,7 +94,7 @@ static struct ht_item_t *ht_item_add(const void *key, size_t key_size, const voi
 void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value,
             size_t val_size, void (*free_func)(void *))
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     /* add hash to list of keys */
 #ifdef HT_KEY_LIST
     ht->keys[hash] += 1;
@@ -138,7 +138,7 @@ void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value
 
 void *ht_get(struct ht_t *ht, const void *key, size_t key_size)
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     struct ht_item_t *item = ht->items[hash];
 
     if (item == NULL)
@@ -163,7 +163,7 @@ struct ht_item_t *ht_geth(struct ht_t *ht, unsigned int hash)
 
 void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     struct ht_item_t *item = ht->items[hash];
 
     if (item == NULL)
