@@ -156,7 +156,7 @@ void *ht_get(struct ht_t *ht, const void *key, size_t key_size)
     return NULL;
 }
 
-struct ht_item_t *ht_geth(struct ht_t *ht, unsigned int hash)
+struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash)
 {
     return ht->items[hash];
 }
