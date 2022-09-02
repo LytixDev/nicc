@@ -20,7 +20,24 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "hashtable.h"
+#include "ht.h"
+
+
+struct ht_item_t {
+    void *key;
+    size_t key_size;            /* total bytes stored in key */
+    void *value;
+    void (*free_func)(void *);  /* the free function used for freeing 'value' */
+    struct ht_item_t *next;
+};
+
+struct ht_t {
+    struct ht_item_t **items;
+    size_t capacity;    /* bucket capacity */
+#ifdef HT_KEY_LIST
+    size_t *keys;       /* amount of items stored per hash */
+#endif
+};
 
 
 static size_t hasher(const void *key, size_t key_size, size_t upper_bound)
@@ -37,7 +54,7 @@ struct ht_t *ht_malloc(size_t capacity)
 {
     struct ht_t *ht = malloc(sizeof(struct ht_t));
     ht->capacity = capacity;
-    ht->items = malloc(ht->capacity * sizeof(ht_item_t*));
+    ht->items = malloc(ht->capacity * sizeof(struct ht_item_t*));
 #ifdef HT_KEY_LIST
     ht->keys = calloc(ht->capacity, sizeof(size_t));
 #endif
