@@ -20,12 +20,29 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "hashtable.h"
+#include "ht.h"
 
 
-static int32_t hasher(const void *key, size_t key_size, size_t upper_bound)
+struct ht_item_t {
+    void *key;
+    size_t key_size;            /* total bytes stored in key */
+    void *value;
+    void (*free_func)(void *);  /* the free function used for freeing 'value' */
+    struct ht_item_t *next;
+};
+
+struct ht_t {
+    struct ht_item_t **items;
+    size_t capacity;    /* bucket capacity */
+#ifdef HT_KEY_LIST
+    size_t *keys;       /* amount of items stored per hash */
+#endif
+};
+
+
+static size_t hasher(const void *key, size_t key_size, size_t upper_bound)
 {
-    int32_t hash = 0;
+    size_t hash = 0;
 
     for (size_t i = 0; i < key_size; i++)
 	hash += (hash << 5) + ((int8_t *)key)[i];
@@ -37,7 +54,7 @@ struct ht_t *ht_malloc(size_t capacity)
 {
     struct ht_t *ht = malloc(sizeof(struct ht_t));
     ht->capacity = capacity;
-    ht->items = malloc(ht->capacity * sizeof(ht_item_t*));
+    ht->items = malloc(ht->capacity * sizeof(struct ht_item_t*));
 #ifdef HT_KEY_LIST
     ht->keys = calloc(ht->capacity, sizeof(size_t));
 #endif
@@ -94,7 +111,7 @@ static struct ht_item_t *ht_item_add(const void *key, size_t key_size, const voi
 void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value,
             size_t val_size, void (*free_func)(void *))
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     /* add hash to list of keys */
 #ifdef HT_KEY_LIST
     ht->keys[hash] += 1;
@@ -138,7 +155,7 @@ void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value
 
 void *ht_get(struct ht_t *ht, const void *key, size_t key_size)
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     struct ht_item_t *item = ht->items[hash];
 
     if (item == NULL)
@@ -156,14 +173,14 @@ void *ht_get(struct ht_t *ht, const void *key, size_t key_size)
     return NULL;
 }
 
-struct ht_item_t *ht_geth(struct ht_t *ht, unsigned int hash)
+struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash)
 {
     return ht->items[hash];
 }
 
 void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
 {
-    int32_t hash = hasher(key, key_size, ht->capacity);
+    size_t hash = hasher(key, key_size, ht->capacity);
     struct ht_item_t *item = ht->items[hash];
 
     if (item == NULL)
@@ -208,3 +225,4 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
         i++;
     }
 }
+

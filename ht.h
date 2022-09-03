@@ -24,8 +24,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef LIB_HASHTABLE_H
-#define LIB_HASHTABLE_H
+#ifndef NICC_HT_H
+#define NICC_HT_H
 
 #include <stdlib.h>
 
@@ -36,22 +36,7 @@
 
 /* types */
 
-typedef struct ht_item_t {
-    void *key;
-    size_t key_size;            /* total bytes stored in key */
-    void *value;
-    void (*free_func)(void *);  /* the free function used for freeing 'value' */
-    struct ht_item_t *next;
-} ht_item_t;
-
-
-typedef struct ht_t {
-    struct ht_item_t **items;
-    size_t capacity;    /* bucket capacity */
-#ifdef HT_KEY_LIST
-    size_t *keys;       /* amount of items stored per hash */
-#endif
-} ht_t;
+typedef struct ht_t ht;
 
 
 /* functions */
@@ -91,9 +76,9 @@ void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value
 void *ht_get(struct ht_t *ht, const void *key, size_t key_size);
 
 /* returns the first item stored with the given hash argument */
-struct ht_item_t *ht_geth(struct ht_t *ht, unsigned int hash);
+struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash);
 
 /* removes and frees the item the hashtable */
 void ht_rm(struct ht_t *ht, const void *key, size_t key_size);
 
-#endif /* LIB_HASHTABLE_H */
+#endif /* NICC_HT_T */
