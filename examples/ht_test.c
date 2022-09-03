@@ -1,15 +1,21 @@
+/*
+ * Written by Nicolai H. Brand (lytix.dev) 2022.
+ * Example usage of the hashtable implementation found in nicc.
+ * Licensed under GPLv3, see the LICENSE file for more info.
+ */
 #include <stdio.h>
 #include <string.h>
 
 #include "../ht.h"
 
 
-void ht_str_set(ht *table, const char *key, const char *val)
+/* wrapper functions when key and val are string */
+void ht_sset(ht *table, const char *key, const char *val)
 {
     ht_set(table, key, strlen(key) + 1, val, strlen(val) + 1, NULL);
 }
 
-char *ht_str_get(ht *table, const char *key)
+char *ht_sget(ht *table, const char *key)
 {
     return ht_get(table, key, strlen(key) + 1);
 }
@@ -22,12 +28,25 @@ int main ()
      * struct ht_t *table = ht_malloc(32);
      */
 
-    char *key = "my key"; 
-    char *val = "hello world!";
+    char *key1 = "my key"; 
+    char *val1 = "hello world!";
+    ht_sset(table, key1, val1);
 
-    ht_str_set(table, key, val);
-    char *res = ht_str_get(table, key);
-    printf("%s = %s\n", val, res);
+    /* example where value is a a struct */
+    typedef struct {
+        int a;
+        char str[32];
+    } my_struct;
+    char *key2 = "my second key";
+    my_struct mst = { .a = 10, .str = "hello" };
+    ht_set(table, key2, strlen(key2) + 1, &mst, sizeof(mst), NULL);
+
+    /* results */
+    char *res1 = ht_sget(table, key1);
+    my_struct *res2 = ht_get(table, key2, strlen(key2) + 1);
+    printf("%s = %s\n", val1, res1);
+    printf("%s = %s\n", mst.str, res2->str);
+
     ht_free(table);
     
     return 0;
