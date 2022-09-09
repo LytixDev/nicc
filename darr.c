@@ -65,7 +65,9 @@ void darr_add(struct darr_t *da, void *val, size_t idx)
     }
 
     da->data[idx] = val;
-    da->size++;
+    /* only increase size if we are not overriding a pre-existing value */
+    if (idx >= da->size)
+        da->size++;
 }
 
 inline void darr_append(struct darr_t *da, void *val)
@@ -90,5 +92,25 @@ void darr_rm(struct darr_t *da, size_t idx)
         da->data[i - 1] = da->data[i];
 
     da->size--;
+}
+
+void *darr_pop(struct darr_t *da)
+{
+    void *item = da->data[da->size - 1];
+    darr_rm(da, da->size - 1);
+    return item;
+}
+
+inline size_t darr_get_size(struct darr_t *da)
+{
+    return da->size;
+}
+
+void darr_raw(struct darr_t *da, void *raw[da->size + 1])
+{
+    for (size_t i = 0; i < da->size; i++)
+        raw[i] = da->data[i];
+
+    da->data[da->size + 1] = NULL;
 }
 

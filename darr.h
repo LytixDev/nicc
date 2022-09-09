@@ -37,10 +37,12 @@ void darr_add(struct darr_t *da, void *val, size_t idx);
 
 void darr_rm(struct darr_t *da, size_t idk);
 
-void darr_pop(struct darr_t *da);
+void *darr_pop(struct darr_t *da);
 
 void *darr_get(struct darr_t *da, size_t idx);
 
-void **darr_raw(struct darr_t *da);
+size_t darr_get_size(struct darr_t *da);
+
+void darr_raw(struct darr_t *da, void *raw[]);
 
 #endif /* NICC_DARR_H */
