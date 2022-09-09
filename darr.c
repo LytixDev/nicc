@@ -21,12 +21,7 @@
 #include "darr.h"
 
 
-/*
-typedef struct darr_item_t {
-    void *value;
-    size_t mem_size;
-} darr_item;
-*/
+/* types */
 
 struct darr_t {
     void **data;
@@ -34,6 +29,8 @@ struct darr_t {
     size_t cap;
 };
 
+
+/* functions */
 
 struct darr_t *darr_malloc(void)
 {

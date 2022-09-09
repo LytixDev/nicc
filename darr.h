@@ -31,18 +31,38 @@ struct darr_t *darr_malloc(void);
 
 void darr_free(struct darr_t *da);
 
+/*
+ * appends the given value parameter to the end of the array.
+ * automatically allocates more space in the array if necessary.
+ */
 void darr_append(struct darr_t *da, void *val);
 
+/*
+ * adds the given value parameter to the given index parameter position.
+ */
 void darr_add(struct darr_t *da, void *val, size_t idx);
 
+
+/*
+ * removes the value stored at the given index and shifts the
+ * values to the right one down.
+ */
 void darr_rm(struct darr_t *da, size_t idk);
 
+/*
+ * removes and returns the last value stored in the array
+ */
 void *darr_pop(struct darr_t *da);
 
 void *darr_get(struct darr_t *da, size_t idx);
 
 size_t darr_get_size(struct darr_t *da);
 
+/*
+ * populates the raw parameter with pointers to the values stored
+ * in the array and NULL terminates it. The raw void pointer array 
+ * should be of size darr_get_size() + 1.
+ */
 void darr_raw(struct darr_t *da, void *raw[]);
 
 #endif /* NICC_DARR_H */
