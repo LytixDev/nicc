@@ -20,7 +20,7 @@ char *ht_sget(ht *table, const char *key)
     return ht_get(table, key, strlen(key) + 1);
 }
 
-int main ()
+int main(void)
 {
     ht *table = ht_malloc(32);
     /*
