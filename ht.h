@@ -38,6 +38,8 @@
 
 typedef struct ht_t ht;
 
+typedef struct ht_item_t ht_item;
+
 
 /* functions */
 

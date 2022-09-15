@@ -15,8 +15,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef NICC_DARR_H
-#define NICC_DARR_H
+#ifndef NICC_DYNAMIC_ARRAY_H
+#define NICC_DYNAMIC_ARRAY_H
 
 #include <stddef.h>
 
@@ -40,7 +40,7 @@ void darr_append(struct darr_t *da, void *val);
 /*
  * adds the given value parameter to the given index parameter position.
  */
-void darr_add(struct darr_t *da, void *val, size_t idx);
+void darr_set(struct darr_t *da, void *val, size_t idx);
 
 
 /*
@@ -65,4 +65,4 @@ size_t darr_get_size(struct darr_t *da);
  */
 void darr_raw(struct darr_t *da, void *raw[]);
 
-#endif /* NICC_DARR_H */
+#endif /* NICC_DYNAMIC_ARRAY_H */

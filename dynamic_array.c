@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "darr.h"
+#include "dynamic_array.h"
 
 
 /* types */
@@ -53,7 +53,7 @@ void darr_free(struct darr_t *da)
     free(da);
 }
 
-void darr_add(struct darr_t *da, void *val, size_t idx)
+void darr_set(struct darr_t *da, void *val, size_t idx)
 {
     if (da->size >= da->cap) {
         /* increase capacity */
@@ -69,7 +69,7 @@ void darr_add(struct darr_t *da, void *val, size_t idx)
 
 inline void darr_append(struct darr_t *da, void *val)
 {
-    darr_add(da, val, da->size);
+    darr_set(da, val, da->size);
 }
 
 void *darr_get(struct darr_t *da, size_t idx)
