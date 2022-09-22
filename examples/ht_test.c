@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../ht.h"
+#define NICC_HT_IMPLEMENTATION
+#include "../nicc.h"
 
 
 /* wrapper functions when key and val are string */

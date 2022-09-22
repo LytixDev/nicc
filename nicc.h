@@ -1,5 +1,4 @@
 /*
- *  Hashtable implementation in C.
  *  Copyright (C) 2022 Nicolai Brand 
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,12 +15,217 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#ifndef NICC_NICC_H
+#define NICC_NICC_H
+
+#include <stdlib.h>     // free, malloc, size_t type
 #include <string.h>
 #include <stdint.h>
 
-#include "ht.h"
 
+/* types */
+typedef struct darr_t darr;
+
+typedef struct ht_t ht;
+
+typedef struct ht_item_t ht_item;
+
+/* darr functions */
+struct darr_t *darr_malloc(void);
+void darr_free(struct darr_t *da);
+/*
+ * appends the given value parameter to the end of the array.
+ * automatically allocates more space in the array if necessary.
+ */
+void darr_append(struct darr_t *da, void *val);
+/*
+ * adds the given value parameter to the given index parameter position.
+ */
+void darr_set(struct darr_t *da, void *val, size_t idx);
+/*
+ * removes the value stored at the given index and shifts the
+ * values to the right one down.
+ */
+void darr_rm(struct darr_t *da, size_t idk);
+/*
+ * removes and returns the last value stored in the array
+ */
+void *darr_pop(struct darr_t *da);
+void *darr_get(struct darr_t *da, size_t idx);
+size_t darr_get_size(struct darr_t *da);
+/*
+ * populates the raw parameter with pointers to the values stored
+ * in the array and NULL terminates it. The raw void pointer array 
+ * should be of size darr_get_size() + 1.
+ */
+void darr_raw(struct darr_t *da, void *raw[]);
+
+/* ht functions */
+struct ht_t *ht_malloc(size_t capacity);
+/* frees the entire ht and all items associated with it */
+void ht_free(struct ht_t *ht);
+/*
+ * Allocates space for a new ht_item_t, computes the hash, and slots the 
+ * item into the given 'ht_t *ht' hashtable. Frees and overrides previous
+ * item if there is an item with the exact same key.
+ *
+ * mem_size argument should be the size of the value argument in bytes.
+ *
+ * If free_func argument is NULL, the value will be freed (later on) using
+ * the standard free() function.
+ * Provide a free_func argument for more complex types where free() is not
+ * sufficient. The free_func should not free the type itself, but only its
+ * members.
+ * example
+ *
+ * void foo_free(void *p)
+ * {
+ *      struct foo *foo_object = (struct foo*)p;
+ *      free(p->member1);
+ *      free(p->member2);
+ *      // DO NOT DO THIS: 'free(p)', it will be done by automatically by
+ *      // the implementation
+ * }
+ */
+void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value,
+            size_t mem_size, void (*free_func)(void *));
+/* returns the value corresponding to the given key */
+void *ht_get(struct ht_t *ht, const void *key, size_t key_size);
+/* returns the first item stored with the given hash argument */
+struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash);
+/* removes and frees the item the hashtable */
+void ht_rm(struct ht_t *ht, const void *key, size_t key_size);
+
+
+#endif /* NICC_NICC_H */
+
+
+#ifdef NICC_IMPLEMENTATION
+#       define NICC_DARR_IMPLEMENTATION
+#       define NICC_HT_IMPLEMENTATION
+#       define NICC_STACK_IMPLEMENTATION
+#endif
+
+#if defined NICC_IMPLEMENTATION || defined NICC_DARR_IMPLEMENTATION || \
+    defined NICC_HT_IMPLEMENTATION || defined NICC_STACK_IMPLEMENTATION
+
+/* internal macros */
+#define GROW_CAPACITY(capacity) \
+    ((capacity) < 8 ? 8 : (capacity) * 2)
+
+#define GROW_ARRAY(type, pointer, new_size) \
+    (type *)nicc_internal_realloc(pointer, sizeof(type) * (new_size))
+
+
+/* internal function definitions */
+void *nicc_internal_realloc(void *ptr, size_t new_size)
+{
+    void *res = realloc(ptr, new_size);
+    //TODO: better error handling
+    if (res == NULL)
+        exit(1);
+
+    return res;
+}
+
+#endif /* any implementation */
+
+
+#ifdef NICC_DARR_IMPLEMENTATION
+
+/* darr implementation */
+struct darr_t {
+    void **data;
+    size_t size;
+    size_t cap;
+};
+
+struct darr_t *darr_malloc(void)
+{
+    struct darr_t *da = (struct darr_t *)malloc(sizeof(struct darr_t));
+
+#ifdef DARR_STARTING_CAP
+    da->cap = DARR_STARTING_CAP;
+#else
+    da->cap = GROW_CAPACITY(da->cap);
+#endif
+
+    da->size = 0;
+    da->data = (void **)malloc(sizeof(void *) * da->cap);
+
+    return da;
+}
+
+void darr_free(struct darr_t *da)
+{
+    free(da->data);
+    free(da);
+}
+
+void darr_set(struct darr_t *da, void *val, size_t idx)
+{
+    if (da->size >= da->cap) {
+        /* increase capacity */
+        da->cap = GROW_CAPACITY(da->cap);
+        da->data = GROW_ARRAY(void, da, da->cap);
+    }
+
+    da->data[idx] = val;
+    /* only increase size if we are not overriding a pre-existing value */
+    if (idx >= da->size)
+        da->size++;
+}
+
+inline void darr_append(struct darr_t *da, void *val)
+{
+    darr_set(da, val, da->size);
+}
+
+void *darr_get(struct darr_t *da, size_t idx)
+{
+    if (idx >= da->size)
+        return NULL;
+
+    return da->data[idx];
+}
+
+void darr_rm(struct darr_t *da, size_t idx)
+{
+    if (idx > da->size || idx < 0)
+        return;
+
+    for (size_t i = idx + 1; i < da->size; i++)
+        da->data[i - 1] = da->data[i];
+
+    da->size--;
+}
+
+void *darr_pop(struct darr_t *da)
+{
+    void *item = da->data[da->size - 1];
+    darr_rm(da, da->size - 1);
+    return item;
+}
+
+inline size_t darr_get_size(struct darr_t *da)
+{
+    return da->size;
+}
+
+void darr_raw(struct darr_t *da, void *raw[da->size + 1])
+{
+    for (size_t i = 0; i < da->size; i++)
+        raw[i] = da->data[i];
+
+    da->data[da->size + 1] = NULL;
+}
+
+#endif /* DARR_IMPLEMENTATION */
+
+
+#ifdef NICC_HT_IMPLEMENTATION
+
+//#define HT_KEY_LIST /* if defined then ht_t will store a list of items stored per hash */
 
 struct ht_item_t {
     void *key;
@@ -226,3 +430,4 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
     }
 }
 
+#endif /* NICC_HT_IMPLEMENTATION */

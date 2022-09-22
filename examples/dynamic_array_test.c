@@ -6,7 +6,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../darr.h"
+#define NICC_DARR_IMPLEMENTATION
+#include "../nicc.h"
 
 
 int main(void)
@@ -25,7 +26,7 @@ int main(void)
     assert(strcmp(str, result) == 0);
 
     /* override "hello" */
-    darr_add(da, "hello world!", 0);
+    darr_set(da, "hello world!", 0);
     result = (char *)darr_get(da, 0);
     assert(strcmp("hello world!", result) == 0);
 
