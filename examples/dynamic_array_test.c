@@ -6,7 +6,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "../dynamic_array.h"
+#define NICC_DARR_IMPLEMENTATION
+#include "../nicc.h"
 
 
 int main(void)
