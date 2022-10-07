@@ -12,7 +12,7 @@
 
 int main(void)
 {
-    darr *da = darr_malloc();
+    struct darr_t *da = darr_malloc();
     /*
      * also valid:
      * struct darr_t *da = darr_malloc();
