@@ -11,23 +11,19 @@
 
 
 /* wrapper functions when key and val are string */
-void ht_sset(ht *table, const char *key, const char *val)
+void ht_sset(struct ht_t *table, const char *key, const char *val)
 {
     ht_set(table, key, strlen(key) + 1, val, strlen(val) + 1, NULL);
 }
 
-char *ht_sget(ht *table, const char *key)
+char *ht_sget(struct ht_t *table, const char *key)
 {
     return ht_get(table, key, strlen(key) + 1);
 }
 
 int main(void)
 {
-    ht *table = ht_malloc(32);
-    /*
-     * also valid:
-     * struct ht_t *table = ht_malloc(32);
-     */
+    struct ht_t *table = ht_malloc(32);
 
     char *key1 = "my key"; 
     char *val1 = "hello world!";

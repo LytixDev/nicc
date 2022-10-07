@@ -23,13 +23,6 @@
 #include <stdint.h>
 
 
-/* types */
-typedef struct darr_t darr;
-
-typedef struct ht_t ht;
-
-typedef struct ht_item_t ht_item;
-
 /* darr functions */
 struct darr_t *darr_malloc(void);
 void darr_free(struct darr_t *da);
