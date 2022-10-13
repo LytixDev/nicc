@@ -89,6 +89,9 @@ struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash);
 /* removes and frees the item the hashtable */
 void ht_rm(struct ht_t *ht, const void *key, size_t key_size);
 
+/* returns a NULL terminated array of all nodes in th*/
+struct ht_item_t **ht_raw(struct ht_t *ht);
+
 
 #endif /* NICC_NICC_H */
 
@@ -421,6 +424,29 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
         item = prev->next;
         i++;
     }
+}
+
+struct ht_item_t **ht_raw(struct ht_t *ht)
+{
+    size_t size = 0;
+    size_t capacity = ht->capacity + 1;
+    struct ht_item_t **raw = malloc(sizeof(struct ht_item_t *) * (ht->capacity + 1));
+
+    for (size_t i = 0; i < ht->capacity; i++) {
+        struct ht_item_t *head = ht->items[i] ;
+        while (head != NULL) {
+            /* ensure space for the sentinel NULL */
+            if (size == capacity - 1) {
+                capacity = GROW_CAPACITY(capacity);
+                raw = GROW_ARRAY(struct ht_item_t *, raw, capacity);
+            }
+            raw[size++] = head;
+            head = head->next;
+        }
+    }
+
+    raw[size] = NULL;
+    return raw;
 }
 
 #endif /* NICC_HT_IMPLEMENTATION */

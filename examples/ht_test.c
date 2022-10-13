@@ -44,6 +44,12 @@ int main(void)
     printf("%s = %s\n", val1, res1);
     printf("%s = %s\n", mst.str, res2->str);
 
+    struct ht_item_t **raw = ht_raw(table);
+
+    for (size_t i = 0; raw[i] != NULL; i++)
+        printf("%s = %x\n", (char *)raw[i]->key, *(int *)raw[i]->value);
+
+    free(raw);
     ht_free(table);
     
     return 0;
