@@ -18,9 +18,10 @@
 #ifndef NICC_NICC_H
 #define NICC_NICC_H
 
-#include <stdlib.h>     // free, malloc, size_t type
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /* darr functions */
@@ -52,6 +53,7 @@ size_t darr_get_size(struct darr_t *da);
  * should be of size darr_get_size() + 1.
  */
 void darr_raw(struct darr_t *da, void *raw[]);
+
 
 /* ht functions */
 struct ht_t *ht_malloc(size_t capacity);
@@ -93,6 +95,21 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size);
 struct ht_item_t **ht_raw(struct ht_t *ht);
 
 
+/* heapq functions */
+/* compares priority of items in heapqueue. I:E: is a > b ? */
+typedef bool (nicc_hq_compare_func)(void *a, void *b);
+struct heapq_t *heapq_malloc(nicc_hq_compare_func *cmp);
+void heapq_free(struct heapq_t *hq);
+void heapq_push(struct heapq_t *hq, void *item);
+void *heapq_get(struct heapq_t *hq, int idx);
+/* 
+ * returns and removes the item at the top of the heap queue.
+ * note: remember to free() the popped item after use if it was malloced before pushing into
+ * the heapq.
+ */
+void *heapq_pop(struct heapq_t *hq);
+
+
 #endif /* NICC_NICC_H */
 
 
@@ -100,10 +117,12 @@ struct ht_item_t **ht_raw(struct ht_t *ht);
 #       define NICC_DARR_IMPLEMENTATION
 #       define NICC_HT_IMPLEMENTATION
 #       define NICC_STACK_IMPLEMENTATION
+#       define NICC_HEAPQ_IMPLEMENTATION
 #endif
 
 #if defined NICC_IMPLEMENTATION || defined NICC_DARR_IMPLEMENTATION || \
-    defined NICC_HT_IMPLEMENTATION || defined NICC_STACK_IMPLEMENTATION
+    defined NICC_HT_IMPLEMENTATION || defined NICC_STACK_IMPLEMENTATION || \
+    defined NICC_HEAPQ_IMPLEMENTATION
 
 /* internal macros */
 #define GROW_CAPACITY(capacity) \
@@ -289,7 +308,6 @@ void ht_free(struct ht_t *ht)
 #ifdef HT_KEY_LIST
     free(ht->keys);
 #endif
-    free(ht);
 }
 
 static struct ht_item_t *ht_item_add(const void *key, size_t key_size, const void *value,
@@ -450,3 +468,124 @@ struct ht_item_t **ht_raw(struct ht_t *ht)
 }
 
 #endif /* NICC_HT_IMPLEMENTATION */
+
+
+#ifdef NICC_HEAPQ_IMPLEMENTATION
+
+#define HEAPQ_STARTING_CAPACITY 32
+
+#define heapq_left_child_idx(parent_idx) (parent_idx * 2 + 1)
+#define heapq_right_child_idx(parent_idx) (parent_idx * 2 + 2)
+#define heapq_parent_idx(child_idx) ((child_idx - 1) / 2)
+
+#define heapq_has_left(idx, size) (heapq_left_child_idx(idx) < size)
+#define heapq_has_right(idx, size) (heapq_right_child_idx(idx) < size
+
+/* heap queue inspired by: https://docs.python.org/3/library/heapq.html */
+struct heapq_t {
+    void **items; 
+    int size;
+    int capacity;
+    nicc_hq_compare_func *cmp;
+};
+
+static inline void *heapq_left_child(struct heapq_t *hq, int idx)
+{
+    return hq->items[heapq_left_child_idx(idx)];
+}
+
+static inline void *heapq_right_child(struct heapq_t *hq, int idx)
+{
+    return hq->items[heapq_right_child_idx(idx)];
+}
+
+static inline void *heapq_parent(struct heapq_t *hq, int idx)
+{
+    return hq->items[heapq_parent_idx(idx)];
+}
+
+static void heapq_swap(struct heapq_t *hq, int a, int b)
+{
+    void *tmp = hq->items[a];
+    hq->items[a] = hq->items[b];
+    hq->items[b] = tmp;
+}
+
+static void heapify_up(struct heapq_t *hq)
+{
+    int idx = hq->size - 1;
+    int parent_idx = heapq_parent_idx(idx);
+    /* keep "repearing" heap as long as parent is greater than child */
+    while (parent_idx >= 0 && hq->cmp(hq->items[parent_idx], hq->items[idx])) {
+        heapq_swap(hq, parent_idx, idx);
+        /* walk upwards */
+        idx = heapq_parent_idx(idx);
+        parent_idx = heapq_parent_idx(idx);
+    }
+}
+
+static void heapify_down(struct heapq_t *hq)
+{
+    int idx = 0;
+    int min_idx;
+    while (heapq_has_left(idx, hq->size)) {
+        min_idx = heapq_left_child_idx(idx);
+        if (heapq_has_right(idx, hq->size) && hq->cmp(hq->items[min_idx],
+                                                      heapq_right_child(hq, idx))))
+            min_idx = heapq_right_child_idx(idx);
+
+        if (hq->cmp(hq->items[min_idx], hq->items[idx])) {
+            break;
+        } else {
+            heapq_swap(hq, idx, min_idx);
+            idx = min_idx;
+        }
+    }
+}
+
+void *heapq_get(struct heapq_t *hq, int idx)
+{
+    if (idx < 0 || idx >= hq->size)
+        return NULL;
+
+    return hq->items[idx];
+}
+
+void *heapq_pop(struct heapq_t *hq)
+{
+    struct node_t *item = heapq_get(hq, 0);
+    if (item == NULL)
+        return NULL;
+
+    hq->items[0] = hq->items[--hq->size];
+    heapify_down(hq);
+    return item;
+}
+
+void heapq_push(struct heapq_t *hq, void *item)
+{
+    if (hq->size >= hq->capacity) {
+        hq->capacity = GROW_CAPACITY(hq->capacity);
+        hq->items = GROW_ARRAY(void, hq, hq->capacity);
+    }
+    hq->items[hq->size++] = item;
+    heapify_up(hq);
+}
+
+void heapq_free(struct heapq_t *hq)
+{
+    free(hq->items);
+    free(hq);
+}
+
+struct heapq_t *heapq_malloc(nicc_hq_compare_func *cmp)
+{
+    struct heapq_t *hq = malloc(sizeof(struct heapq_t));
+    hq->size = 0;
+    hq->capacity = HEAPQ_STARTING_CAPACITY;
+    hq->items = malloc(hq->capacity * sizeof(void *));
+    hq->cmp = cmp;
+    return hq;
+}
+
+#endif /* NICC_HEAPQ_IMPLEMENTATION */
