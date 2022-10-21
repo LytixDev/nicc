@@ -1,6 +1,13 @@
 # nicc
 Generic types for C11.
 
+### Types
+- [x] hashtable
+- [x] dynamic array
+- [x] heap queue
+- [ ] stack
+- [ ] variable bucket hashtable
+
 ### Setup
 Include the header file into your C project:
 ```c
