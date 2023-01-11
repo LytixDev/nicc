@@ -54,6 +54,8 @@ size_t darr_get_size(struct darr_t *da);
  */
 void darr_raw(struct darr_t *da, void *raw[]);
 
+void **darr_raw_ret(struct darr_t *da);
+
 
 /* ht functions */
 struct ht_t *ht_malloc(size_t capacity);
