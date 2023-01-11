@@ -235,6 +235,11 @@ void darr_raw(struct darr_t *da, void *raw[da->size + 1])
     da->data[da->size + 1] = NULL;
 }
 
+void **darr_raw_ret(struct darr_t *da)
+{
+    return da->data;
+}
+
 #endif /* DARR_IMPLEMENTATION */
 
 
