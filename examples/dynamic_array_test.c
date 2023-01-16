@@ -42,13 +42,6 @@ int main(void)
 
     /* add another value */
     darr_append(da, "hey");
-    /* create array that can store all data stored in da */
-    size_t current_size = darr_get_size(da);
-    char *raw[current_size];
-    /* populates the 'raw' array with the data stored in da */
-    darr_raw(da, (void **)raw);
-    for (size_t i = 0; i < current_size; i++)
-        assert(strcmp(raw[i], darr_get(da, i)) == 0);
 
     /* pop last item from array */
     char *item = darr_pop(da);

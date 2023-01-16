@@ -47,12 +47,6 @@ void darr_rm(struct darr_t *da, size_t idk);
 void *darr_pop(struct darr_t *da);
 void *darr_get(struct darr_t *da, size_t idx);
 size_t darr_get_size(struct darr_t *da);
-/*
- * populates the raw parameter with pointers to the values stored
- * in the array and NULL terminates it. The raw void pointer array 
- * should be of size darr_get_size() + 1.
- */
-void darr_raw(struct darr_t *da, void *raw[]);
 
 void **darr_raw_ret(struct darr_t *da);
 
@@ -164,6 +158,7 @@ struct darr_t *darr_malloc(void)
 #ifdef DARR_STARTING_CAP
     da->cap = DARR_STARTING_CAP;
 #else
+    da->cap = 0;
     da->cap = GROW_CAPACITY(da->cap);
 #endif
 
@@ -184,7 +179,7 @@ void darr_set(struct darr_t *da, void *val, size_t idx)
     if (da->size >= da->cap) {
         /* increase capacity */
         da->cap = GROW_CAPACITY(da->cap);
-        da->data = GROW_ARRAY(void, da, da->cap);
+        da->data = GROW_ARRAY(void *, da, da->cap);
     }
 
     da->data[idx] = val;
@@ -208,7 +203,7 @@ void *darr_get(struct darr_t *da, size_t idx)
 
 void darr_rm(struct darr_t *da, size_t idx)
 {
-    if (idx > da->size || idx < 0)
+    if (idx > da->size)
         return;
 
     for (size_t i = idx + 1; i < da->size; i++)
@@ -227,14 +222,6 @@ void *darr_pop(struct darr_t *da)
 inline size_t darr_get_size(struct darr_t *da)
 {
     return da->size;
-}
-
-void darr_raw(struct darr_t *da, void *raw[da->size + 1])
-{
-    for (size_t i = 0; i < da->size; i++)
-        raw[i] = da->data[i];
-
-    da->data[da->size + 1] = NULL;
 }
 
 void **darr_raw_ret(struct darr_t *da)
@@ -573,7 +560,7 @@ void heapq_push(struct heapq_t *hq, void *item)
 {
     if (hq->size >= hq->capacity) {
         hq->capacity = GROW_CAPACITY(hq->capacity);
-        hq->items = GROW_ARRAY(void, hq, hq->capacity);
+        hq->items = GROW_ARRAY(void *, hq, hq->capacity);
     }
     hq->items[hq->size++] = item;
     heapify_up(hq);
