@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,43 +52,21 @@ void **darr_raw_ret(struct darr_t *da);
 
 
 /* ht functions */
-struct ht_t *ht_malloc(size_t capacity);
+struct ht_t *ht_alloc(size_t capacity);
 /* frees the entire ht and all items associated with it */
 void ht_free(struct ht_t *ht);
-/*
- * Allocates space for a new ht_item_t, computes the hash, and slots the 
- * item into the given 'ht_t *ht' hashtable. Frees and overrides previous
- * item if there is an item with the exact same key.
- *
- * mem_size argument should be the size of the value argument in bytes.
- *
- * If free_func argument is NULL, the value will be freed (later on) using
- * the standard free() function.
- * Provide a free_func argument for more complex types where free() is not
- * sufficient. The free_func should not free the type itself, but only its
- * members.
- * example
- *
- * void foo_free(void *p)
- * {
- *      struct foo *foo_object = (struct foo*)p;
- *      free(p->member1);
- *      free(p->member2);
- *      // DO NOT DO THIS: 'free(p)', it will be done by automatically by
- *      // the implementation
- * }
- */
-void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value,
-            size_t mem_size, void (*free_func)(void *));
-/* returns the value corresponding to the given key */
-void *ht_get(struct ht_t *ht, const void *key, size_t key_size);
-/* returns the first item stored with the given hash argument */
-struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash);
-/* removes and frees the item the hashtable */
-void ht_rm(struct ht_t *ht, const void *key, size_t key_size);
+
+void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value);
+#define ht_sset(a, b, c) ht_set((a), (b), strlen(b) + 1, (c))
+
+void *ht_get(struct ht_t *ht, void *key, size_t key_size);
+#define ht_sget(a, b) ht_get(a, b, strlen(b) + 1)
+
+void ht_rm(struct ht_t *ht, void *key, size_t key_size);
+#define ht_srm(a, b) ht_rm(a, b, strlen(b) + 1)
 
 /* returns a NULL terminated array of all nodes in th*/
-struct ht_item_t **ht_raw(struct ht_t *ht);
+void **ht_raw(struct ht_t *ht);
 
 
 /* heapq functions */
@@ -234,46 +212,40 @@ void **darr_raw_ret(struct darr_t *da)
 
 #ifdef NICC_HT_IMPLEMENTATION
 
-//#define HT_KEY_LIST /* if defined then ht_t will store a list of items stored per hash */
-
 struct ht_item_t {
     void *key;
     size_t key_size;            /* total bytes stored in key */
     void *value;
-    void (*free_func)(void *);  /* the free function used for freeing 'value' */
+    uint8_t hash_extra;
     struct ht_item_t *next;
 };
 
 struct ht_t {
-    struct ht_item_t **items;
-    size_t capacity;    /* bucket capacity */
-#ifdef HT_KEY_LIST
-    size_t *keys;       /* amount of items stored per hash */
-#endif
+    struct ht_item_t **buckets;
+    size_t bucket_capacity;     /* bucket capacity */
+    size_t len;                 /* total amount of item stored */
 };
 
 
-static size_t hasher(const void *key, size_t key_size, size_t upper_bound)
+static size_t hash_func(const void *key, size_t key_size)
 {
     size_t hash = 0;
 
     for (size_t i = 0; i < key_size; i++)
 	hash += (hash << 5) + ((int8_t *)key)[i];
 
-    return hash % upper_bound;
+    return hash;
 }
 
-struct ht_t *ht_malloc(size_t capacity)
+struct ht_t *ht_alloc(size_t capacity)
 {
     struct ht_t *ht = malloc(sizeof(struct ht_t));
-    ht->capacity = capacity;
-    ht->items = malloc(ht->capacity * sizeof(struct ht_item_t*));
-#ifdef HT_KEY_LIST
-    ht->keys = calloc(ht->capacity, sizeof(size_t));
-#endif
+    ht->len = 0;
+    ht->bucket_capacity = capacity;
+    ht->buckets = malloc(ht->bucket_capacity * sizeof(struct ht_item_t *));
 
-    for (size_t i = 0; i < ht->capacity; i++)
-        ht->items[i] = NULL;
+    for (size_t i = 0; i < ht->bucket_capacity; i++)
+        ht->buckets[i] = NULL;
 
     return ht;
 }
@@ -283,59 +255,44 @@ void ht_free(struct ht_t *ht)
     struct ht_item_t *item;
     struct ht_item_t *prev;
 
-    for (size_t i = 0; i < ht->capacity; i++) {
-        item = ht->items[i];
+    for (size_t i = 0; i < ht->bucket_capacity; i++) {
+        item = ht->buckets[i];
         while (item != NULL) {
             free(item->key);
-
-            if (item->free_func != NULL)
-                item->free_func(item->value);
-
-            free(item->value);
             prev = item;
             item = item->next;
             free(prev);
         }
     }
-    free(ht->items);
-
-#ifdef HT_KEY_LIST
-    free(ht->keys);
-#endif
+    free(ht->buckets);
 }
 
-static struct ht_item_t *ht_item_add(const void *key, size_t key_size, const void *value,
-                                     size_t val_size, void (*free_func)(void *))
+static struct ht_item_t *ht_item_add(void *key, size_t key_size, void *value, uint8_t extra)
 {
     struct ht_item_t *ht_item = malloc(sizeof(struct ht_item_t));
     ht_item->key = malloc(key_size);
-    memcpy(ht_item->key, key, key_size);
-
-    ht_item->value = malloc(val_size);
-    memcpy(ht_item->value, value, val_size);
-
-    ht_item->next = NULL;
     ht_item->key_size = key_size;
-    ht_item->free_func = free_func;
+    memcpy(ht_item->key, key, key_size);
+    ht_item->value = value;
+    ht_item->next = NULL;
+    ht_item->hash_extra = extra;
     return ht_item;
 }
 
-void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value,
-            size_t val_size, void (*free_func)(void *))
+void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value)
 {
-    size_t hash = hasher(key, key_size, ht->capacity);
-    /* add hash to list of keys */
-#ifdef HT_KEY_LIST
-    ht->keys[hash] += 1;
-#endif
+    size_t hash_f = hash_func(key, key_size);
+    size_t hash = hash_f % ht->bucket_capacity;
+    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
 
     struct ht_item_t *found;
-    struct ht_item_t *item = ht->items[hash];
+    struct ht_item_t *item = ht->buckets[hash];
 
     /* no ht_item means hash empty, insert immediately */
     if (item == NULL) {
-        found = ht_item_add(key, key_size, value, val_size, free_func);
-        ht->items[hash] = found;
+        found = ht_item_add(key, key_size, value, extra);
+        ht->buckets[hash] = found;
+        ht->len++;
         return;
     }
 
@@ -347,12 +304,10 @@ void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value
      */
     while (item != NULL) {
         if (key_size == item->key_size) {
-            if (memcmp(key, item->key, key_size) == 0) {
-                /* match found, replace value and free_func */
-                free(item->value);
-                item->value = malloc(val_size);
-                memcpy(item->value, value, val_size);
-                item->free_func = free_func;
+            if (value == item->value) {
+                /* match found, replace value */
+                //free(item->value);
+                item->value = value;
                 return;
             }
         }
@@ -362,38 +317,35 @@ void ht_set(struct ht_t *ht, const void *key, size_t key_size, const void *value
     }
 
     /* end of chain reached without a match, add new */
-    prev->next = ht_item_add(key, key_size, value, val_size, free_func);
+    prev->next = ht_item_add(key, key_size, value, extra);
+    ht->len++;
 }
 
-void *ht_get(struct ht_t *ht, const void *key, size_t key_size)
+void *ht_get(struct ht_t *ht, void *key, size_t key_size)
 {
-    size_t hash = hasher(key, key_size, ht->capacity);
-    struct ht_item_t *item = ht->items[hash];
-
-    if (item == NULL)
-        return NULL;
+    size_t hash_f = hash_func(key, key_size);
+    size_t hash = hash_f % ht->bucket_capacity;
+    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
+    struct ht_item_t *item = ht->buckets[hash];
 
     while (item != NULL) {
-        if (key_size == item->key_size)
+        if (item->hash_extra == extra)
             if (memcmp(key, item->key, key_size) == 0)
                 return item->value;
 
         item = item->next;
     }
 
-    /* reaching here means there were >= 1 items but no key match */
     return NULL;
 }
 
-struct ht_item_t *ht_geth(struct ht_t *ht, size_t hash)
+void ht_rm(struct ht_t *ht, void *key, size_t key_size)
 {
-    return ht->items[hash];
-}
+    size_t hash_f = hash_func(key, key_size);
+    size_t hash = hash_f % ht->bucket_capacity;
+    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
 
-void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
-{
-    size_t hash = hasher(key, key_size, ht->capacity);
-    struct ht_item_t *item = ht->items[hash];
+    struct ht_item_t *item = ht->buckets[hash];
 
     if (item == NULL)
         return;
@@ -402,14 +354,17 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
     int i = 0;
 
     while (item != NULL) {
-        if (strcmp(item->key, key) == 0) {
+        if (item->hash_extra != extra)
+            goto cont;
+
+        if (memcmp(item->key, key, key_size) == 0) {
             /* first ht_item and no next ht_item */
             if (item->next == NULL && i == 0)
-                ht->items[hash] = NULL;
+                ht->buckets[hash] = NULL;
 
             /* first ht_item with a next ht_item */
             if (item->next != NULL && i == 0)
-                ht->items[hash] = item->next;
+                ht->buckets[hash] = item->next;
 
             /* last ht_item */
             if (item->next == NULL && i != 0)
@@ -421,16 +376,12 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
 
             /* free the deleted ht_item */
             free(item->key);
-            free(item->value);
             free(item);
-
-#ifdef HT_KEY_LIST
-            ht->keys[hash] -= 1;
-#endif
-
+            ht->len--;
             return;
         }
 
+    cont:
         /* walk to next */
         prev = item;
         item = prev->next;
@@ -438,29 +389,27 @@ void ht_rm(struct ht_t *ht, const void *key, size_t key_size)
     }
 }
 
-struct ht_item_t **ht_raw(struct ht_t *ht)
+size_t ht_get_len(struct ht_t *ht)
 {
-    size_t size = 0;
-    size_t capacity = ht->capacity + 1;
-    struct ht_item_t **raw = malloc(sizeof(struct ht_item_t *) * (ht->capacity + 1));
+    return ht->len;
+}
 
-    for (size_t i = 0; i < ht->capacity; i++) {
-        struct ht_item_t *head = ht->items[i] ;
-        while (head != NULL) {
-            /* ensure space for the sentinel NULL */
-            if (size == capacity - 1) {
-                capacity = GROW_CAPACITY(capacity);
-                raw = GROW_ARRAY(struct ht_item_t *, raw, capacity);
-            }
-            raw[size++] = head;
-            head = head->next;
+void **ht_raw(struct ht_t *ht)
+{
+    void **raw = malloc(ht->len * (sizeof(void *) + 1));
+    raw[ht->len] = NULL;
+    size_t pos = 0;
+
+    for (size_t i = 0; i < ht->bucket_capacity; i++) {
+        struct ht_item_t *p = ht->buckets[i] ;
+        while (p != NULL) {
+            raw[pos++] = p->value;
+            p = p->next;
         }
     }
 
-    raw[size] = NULL;
     return raw;
 }
-
 #endif /* NICC_HT_IMPLEMENTATION */
 
 
