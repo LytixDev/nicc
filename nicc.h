@@ -53,21 +53,26 @@ void **darr_raw_ret(struct darr_t *da);
 
 /* ht functions */
 struct ht_t *ht_alloc(size_t capacity);
-/* frees the entire ht and all items associated with it */
+/* frees the entire ht and all values allocated with it */
 void ht_free(struct ht_t *ht);
 
 void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value);
-#define ht_sset(a, b, c) ht_set((a), (b), strlen(b) + 1, (c))
+#define ht_sset(a, b, c) ht_set(a, b, (strlen(b) + 1) * sizeof(char), c)
+
+void ht_set_alloc(struct ht_t *ht, void *key, size_t key_size, void *value, size_t val_size);
+#define ht_sset_alloc(a, b, c, d) ht_set_alloc(a, b, (strlen(b) + 1) * sizeof(char), c, d)
+#define ht_sset_alloc_T(a, b, c, T) ht_set_alloc(a, b, (strlen(b) + 1) * sizeof(char), c, sizeof(T))
 
 void *ht_get(struct ht_t *ht, void *key, size_t key_size);
-#define ht_sget(a, b) ht_get(a, b, strlen(b) + 1)
+#define ht_sget(a, b) ht_get(a, b, (strlen(b) + 1) * sizeof(char))
 
 void ht_rm(struct ht_t *ht, void *key, size_t key_size);
-#define ht_srm(a, b) ht_rm(a, b, strlen(b) + 1)
+#define ht_srm(a, b) ht_rm(a, b, (strlen(b) + 1) * sizeof(char))
 
-/* returns a NULL terminated array of all nodes in th*/
+size_t ht_get_len(struct ht_t *ht);
+
+/* returns a NULL terminated array of all values */
 void **ht_raw(struct ht_t *ht);
-
 
 /* heapq functions */
 /* compares priority of items in heapqueue. I:E: is a > b ? */
@@ -216,7 +221,7 @@ struct ht_item_t {
     void *key;
     size_t key_size;            /* total bytes stored in key */
     void *value;
-    uint8_t hash_extra;
+    uint8_t hash_extra_and_alloc_flag;
     struct ht_item_t *next;
 };
 
@@ -258,6 +263,8 @@ void ht_free(struct ht_t *ht)
     for (size_t i = 0; i < ht->bucket_capacity; i++) {
         item = ht->buckets[i];
         while (item != NULL) {
+            if (item->hash_extra_and_alloc_flag & 128)
+                free(item->value);
             free(item->key);
             prev = item;
             item = item->next;
@@ -267,43 +274,64 @@ void ht_free(struct ht_t *ht)
     free(ht->buckets);
 }
 
-static struct ht_item_t *ht_item_add(void *key, size_t key_size, void *value, uint8_t extra)
+static inline uint8_t hash_extra(size_t hash)
+{
+    size_t mask = (1 << 7) - 1;
+    return (uint8_t)hash & mask;
+}
+
+static struct ht_item_t *ht_item_add(void *key, size_t key_size, void *value, size_t val_size,
+                                     uint8_t extra)
 {
     struct ht_item_t *ht_item = malloc(sizeof(struct ht_item_t));
     ht_item->key = malloc(key_size);
     ht_item->key_size = key_size;
     memcpy(ht_item->key, key, key_size);
-    ht_item->value = value;
+    ht_item->hash_extra_and_alloc_flag = extra;
+
+    if (val_size == 0) {
+        ht_item->value = value;
+    } else {
+        /* set alloc flag */
+        ht_item->hash_extra_and_alloc_flag |= 128; /* 0b10000000 */
+        ht_item->value = malloc(val_size);
+        memcpy(ht_item->value, value, val_size);
+    }
+
     ht_item->next = NULL;
-    ht_item->hash_extra = extra;
     return ht_item;
 }
 
-void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value)
+void ht_set_alloc(struct ht_t *ht, void *key, size_t key_size, void *value, size_t val_size)
 {
     size_t hash_f = hash_func(key, key_size);
     size_t hash = hash_f % ht->bucket_capacity;
-    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
+    uint8_t extra = hash_extra(hash);
 
     struct ht_item_t *found;
     struct ht_item_t *item = ht->buckets[hash];
 
     /* no ht_item means hash empty, insert immediately */
     if (item == NULL) {
-        found = ht_item_add(key, key_size, value, extra);
+        found = ht_item_add(key, key_size, value, val_size, extra);
         ht->buckets[hash] = found;
         ht->len++;
         return;
     }
 
     struct ht_item_t *prev;
+    uint8_t item_extra;
 
     /*
      * walk through each ht_item until either the end is
      * reached or a matching key is found
      */
     while (item != NULL) {
-        if (key_size == item->key_size) {
+        item_extra = item->hash_extra_and_alloc_flag;
+        /* remove alloc flag if exists */
+        item_extra &= (1 << 7) - 1;
+
+        if (extra == item_extra) {
             if (value == item->value) {
                 /* match found, replace value */
                 //free(item->value);
@@ -317,19 +345,33 @@ void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value)
     }
 
     /* end of chain reached without a match, add new */
-    prev->next = ht_item_add(key, key_size, value, extra);
+    prev->next = ht_item_add(key, key_size, value, val_size, extra);
     ht->len++;
+}
+
+void ht_set(struct ht_t *ht, void *key, size_t key_size, void *value)
+{
+    ht_set_alloc(ht, key, key_size, value, 0);
 }
 
 void *ht_get(struct ht_t *ht, void *key, size_t key_size)
 {
+    if (ht->len == 0)
+        return NULL;
+
     size_t hash_f = hash_func(key, key_size);
     size_t hash = hash_f % ht->bucket_capacity;
-    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
+    uint8_t extra = hash_extra(hash);
+
     struct ht_item_t *item = ht->buckets[hash];
+    uint8_t item_extra;
 
     while (item != NULL) {
-        if (item->hash_extra == extra)
+        item_extra = item->hash_extra_and_alloc_flag;
+        /* remove alloc flag if exists */
+        item_extra &= (1 << 7) - 1;
+
+        if (item_extra == extra)
             if (memcmp(key, item->key, key_size) == 0)
                 return item->value;
 
@@ -341,9 +383,12 @@ void *ht_get(struct ht_t *ht, void *key, size_t key_size)
 
 void ht_rm(struct ht_t *ht, void *key, size_t key_size)
 {
+    if (ht->len == 0)
+        return ;
+
     size_t hash_f = hash_func(key, key_size);
     size_t hash = hash_f % ht->bucket_capacity;
-    uint8_t extra = (uint8_t)(hash >> (sizeof(size_t) - 8));
+    uint8_t extra = hash_extra(hash);
 
     struct ht_item_t *item = ht->buckets[hash];
 
@@ -351,10 +396,15 @@ void ht_rm(struct ht_t *ht, void *key, size_t key_size)
         return;
 
     struct ht_item_t *prev;
+    uint8_t item_extra;
     int i = 0;
 
     while (item != NULL) {
-        if (item->hash_extra != extra)
+        item_extra = item->hash_extra_and_alloc_flag;
+        /* remove alloc flag if exists */
+        item_extra &= (1 << 7) - 1;
+
+        if (item_extra != extra)
             goto cont;
 
         if (memcmp(item->key, key, key_size) == 0) {
@@ -375,6 +425,8 @@ void ht_rm(struct ht_t *ht, void *key, size_t key_size)
                 prev->next = item->next;
 
             /* free the deleted ht_item */
+            if (item->hash_extra_and_alloc_flag & 128)
+                free(item->value);
             free(item->key);
             free(item);
             ht->len--;
