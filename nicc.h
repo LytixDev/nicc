@@ -108,7 +108,7 @@ void *heapq_pop(struct heapq_t *hq);
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
 #define GROW_ARRAY(type, pointer, new_size) \
-    (type *)nicc_internal_realloc(pointer, sizeof(type) * (new_size))
+    (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
 
 
 /* internal function definitions */
@@ -162,7 +162,7 @@ void darr_set(struct darr_t *da, void *val, size_t idx)
     if (da->size >= da->cap) {
         /* increase capacity */
         da->cap = GROW_CAPACITY(da->cap);
-        da->data = GROW_ARRAY(void *, da, da->cap);
+        da->data = GROW_ARRAY(void *, da->data, da->cap);
     }
 
     da->data[idx] = val;
