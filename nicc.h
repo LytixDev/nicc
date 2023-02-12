@@ -203,7 +203,7 @@ static uint32_t hash_func_map(void *t, size_t ts)
     return k * A;
 }
 
-static inline uint8_t hash_extra(uint32_t hash)
+static inline uint8_t hash_extra_map(uint32_t hash)
 {
     int mask = (1 << 8) - 1;
     return (uint8_t)(hash & mask);
@@ -341,7 +341,7 @@ static void hash_and_insert(struct bucket_t *new_buckets, uint32_t size_log2,
 {
     uint32_t hash_full = hash_func_map(entry->key, entry->key_size);
     uint32_t hash = hash_full >> (32 - size_log2);
-    uint8_t extra = hash_extra(hash_full);
+    uint8_t extra = hash_extra_map(hash_full);
     insert_into_bucket(&new_buckets[hash], entry->key, entry->key_size, entry->value, extra);
 }
 
@@ -436,7 +436,7 @@ void hashmap_put(struct hashmap_t *map, void *key, size_t key_size, void *t, siz
 
     uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
-    uint8_t extra = hash_extra(hash_full);
+    uint8_t extra = hash_extra_map(hash_full);
     bool rc = insert_into_bucket(&map->buckets[hash], key, key_size, t, extra);
     if (rc)
         map->len++;
@@ -453,7 +453,7 @@ void *hashmap_get(struct hashmap_t *map, void *key, size_t key_size)
 #endif
     uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
-    uint8_t extra = hash_extra(hash_full);
+    uint8_t extra = hash_extra_map(hash_full);
 #ifdef HASHMAP_THREAD_SAFE
     pthread_mutex_unlock(&map->lock);
 #endif
@@ -467,7 +467,7 @@ bool hashmap_rm(struct hashmap_t *map, void *key, size_t key_size)
 #endif
     uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
-    uint8_t extra = hash_extra(hash_full);
+    uint8_t extra = hash_extra_map(hash_full);
     struct hashmap_entry_t *entry =  get_from_bucket(&map->buckets[hash], key, key_size, extra);
     if (entry == NULL || entry->value == NULL) {
 #ifdef HASHMAP_THREAD_SAFE
