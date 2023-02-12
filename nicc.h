@@ -43,6 +43,8 @@
  * authour of the source code, I license it under GPL3 per my own discretion.
  */
 
+struct hashmap_t;
+
 void hashmap_init(struct hashmap_t *map);
 
 void hashmap_free(struct hashmap_t *map);
@@ -190,7 +192,7 @@ struct hashmap_t {
 #endif
 };
 
-static uint32_t hash_func(void *t, size_t ts)
+static uint32_t hash_func_map(void *t, size_t ts)
 {
     //NOTE: gigahafting kok (legger dermed ikke så mye lit til det)
     uint32_t A = 1327217885;
@@ -337,7 +339,7 @@ static void *get_from_bucket(struct bucket_t *bucket, void *key, size_t key_size
 static void hash_and_insert(struct bucket_t *new_buckets, uint32_t size_log2,
                             struct hashmap_entry_t *entry)
 {
-    uint32_t hash_full = hash_func(entry->key, entry->key_size);
+    uint32_t hash_full = hash_func_map(entry->key, entry->key_size);
     uint32_t hash = hash_full >> (32 - size_log2);
     uint8_t extra = hash_extra(hash_full);
     insert_into_bucket(&new_buckets[hash], entry->key, entry->key_size, entry->value, extra);
@@ -432,7 +434,7 @@ void hashmap_put(struct hashmap_t *map, void *key, size_t key_size, void *t, siz
         move_entries(map, new_buckets);
     }
 
-    uint32_t hash_full = hash_func(key, key_size);
+    uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
     uint8_t extra = hash_extra(hash_full);
     bool rc = insert_into_bucket(&map->buckets[hash], key, key_size, t, extra);
@@ -449,7 +451,7 @@ void *hashmap_get(struct hashmap_t *map, void *key, size_t key_size)
 #ifdef HASHMAP_THREAD_SAFE
     pthread_mutex_lock(&map->lock);
 #endif
-    uint32_t hash_full = hash_func(key, key_size);
+    uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
     uint8_t extra = hash_extra(hash_full);
 #ifdef HASHMAP_THREAD_SAFE
@@ -463,7 +465,7 @@ bool hashmap_rm(struct hashmap_t *map, void *key, size_t key_size)
 #ifdef HASHMAP_THREAD_SAFE
     pthread_mutex_lock(&map->lock);
 #endif
-    uint32_t hash_full = hash_func(key, key_size);
+    uint32_t hash_full = hash_func_map(key, key_size);
     uint32_t hash = hash_full >> (32 - map->size_log2);
     uint8_t extra = hash_extra(hash_full);
     struct hashmap_entry_t *entry =  get_from_bucket(&map->buckets[hash], key, key_size, extra);
