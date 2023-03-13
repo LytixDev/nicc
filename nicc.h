@@ -71,7 +71,13 @@ void darr_set(struct darr_t *da, void *val, size_t idx);
  * removes the value stored at the given index and shifts the
  * values to the right one down.
  */
-void darr_rm(struct darr_t *da, size_t idk);
+void darr_rm(struct darr_t *da, size_t idx);
+
+/*
+ * removes the given value parameter from the list if it is found
+ * NOTE: you can only use this function if all the elements no less than the given size parameter
+ */
+void darr_rmv(struct darr_t *da, void *val, size_t size);
 /*
  * removes and returns the last value stored in the array
  */
@@ -554,6 +560,16 @@ void darr_rm(struct darr_t *da, size_t idx)
         da->data[i - 1] = da->data[i];
 
     da->size--;
+}
+
+void darr_rmv(struct darr_t *da, void *val, size_t size)
+{
+    for (size_t i = 0; i < da->size; i++) {
+        if (memcmp(da->data[i], val, size) == 0) {
+            darr_rm(da, i);
+            return;
+        }
+    }
 }
 
 void *darr_pop(struct darr_t *da)
