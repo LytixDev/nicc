@@ -47,6 +47,15 @@ int main(void)
     char *item = darr_pop(da);
     /* know "hey" should be the last item */
     assert(strcmp(item, "hey") == 0);
+    /* pop "world!" */
+    darr_pop(da);
+
+    darr_append(da, "first");
+    darr_append(da, "second");
+    darr_append(da, "third");
+    darr_rmv(da, "first", strlen("first") + 1);
+    char *r = darr_get(da, 0);
+    assert(strcmp(r, "second") == 0);
     
     darr_free(da);
     return 0;
