@@ -71,13 +71,13 @@ void darr_set(struct darr_t *da, void *val, size_t idx);
  * removes the value stored at the given index and shifts the
  * values to the right one down.
  */
-void darr_rm(struct darr_t *da, size_t idx);
+bool darr_rm(struct darr_t *da, size_t idx);
 
 /*
  * removes the given value parameter from the list if it is found
  * NOTE: you can only use this function if all the elements no less than the given size parameter
  */
-void darr_rmv(struct darr_t *da, void *val, size_t size);
+bool darr_rmv(struct darr_t *da, void *val, size_t size);
 /*
  * removes and returns the last value stored in the array
  */
@@ -103,7 +103,7 @@ void ht_set_alloc(struct ht_t *ht, void *key, size_t key_size, void *value, size
 void *ht_get(struct ht_t *ht, void *key, size_t key_size);
 #define ht_sget(a, b) ht_get(a, b, (strlen(b) + 1) * sizeof(char))
 
-void ht_rm(struct ht_t *ht, void *key, size_t key_size);
+bool ht_rm(struct ht_t *ht, void *key, size_t key_size);
 #define ht_srm(a, b) ht_rm(a, b, (strlen(b) + 1) * sizeof(char))
 
 size_t ht_get_len(struct ht_t *ht);
@@ -551,23 +551,23 @@ void *darr_get(struct darr_t *da, size_t idx)
     return da->data[idx];
 }
 
-void darr_rm(struct darr_t *da, size_t idx)
+bool darr_rm(struct darr_t *da, size_t idx)
 {
     if (idx > da->size)
-        return;
+        return false;
 
     for (size_t i = idx + 1; i < da->size; i++)
         da->data[i - 1] = da->data[i];
 
     da->size--;
+    return true;
 }
 
-void darr_rmv(struct darr_t *da, void *val, size_t size)
+bool darr_rmv(struct darr_t *da, void *val, size_t size)
 {
     for (size_t i = 0; i < da->size; i++) {
         if (memcmp(da->data[i], val, size) == 0) {
-            darr_rm(da, i);
-            return;
+            return darr_rm(da, i);
         }
     }
 }
@@ -758,10 +758,10 @@ void *ht_get(struct ht_t *ht, void *key, size_t key_size)
     return NULL;
 }
 
-void ht_rm(struct ht_t *ht, void *key, size_t key_size)
+bool ht_rm(struct ht_t *ht, void *key, size_t key_size)
 {
     if (ht->len == 0)
-        return ;
+        return false;
 
     size_t hash_f = hash_func(key, key_size);
     size_t hash = hash_f % ht->bucket_capacity;
@@ -770,7 +770,7 @@ void ht_rm(struct ht_t *ht, void *key, size_t key_size)
     struct ht_item_t *item = ht->buckets[hash];
 
     if (item == NULL)
-        return;
+        return false;
 
     struct ht_item_t *prev;
     uint8_t item_extra;
@@ -807,7 +807,7 @@ void ht_rm(struct ht_t *ht, void *key, size_t key_size)
             free(item->key);
             free(item);
             ht->len--;
-            return;
+            return true;
         }
 
     cont:
