@@ -3,11 +3,13 @@ Generic types for C11.
 
 ### Datastructures
 - [x] fixed-size hashtable (ht)
-- [x] dynamic hashtable (hashmap)
+- [x] dynamic hashtable (hashmap)*
 - [x] dynamic array (darr)
 - [x] heap queue (hq)
 - [ ] circular queue
 - [ ] stack
+
+\* hashmap implementation mirrors https://github.com/DHPS-Solutions/dhps-lib/blob/main/hashmap.c
 
 ### Setup
 Include the header file into your C project:
