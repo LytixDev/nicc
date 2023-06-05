@@ -223,7 +223,7 @@ static u32 hash_func_m(void *data, u32 size)
     return k * A;
 }
 
-static inline u8 hash_extra(u32 hash)
+static inline u8 hm_hash_extra(u32 hash)
 {
     return (u8)(hash & ((1 << 8) - 1));
 }
@@ -320,7 +320,7 @@ static struct hm_entry_t *get_entry(struct hashmap_t *map, void *key, u32 key_si
 
     u32 hash = hash_func_m(key, key_size);
     u32 idx = hash >> (32 - map->size_log2);
-    u8 extra = hash_extra(hash);
+    u8 extra = hm_hash_extra(hash);
     struct hm_bucket_t *bucket = &map->buckets[idx];
     return get_from_bucket(bucket, key, key_size, extra);
 }
@@ -386,7 +386,7 @@ void hashmap_put(struct hashmap_t *map, void *key, u32 key_size, void *value, u3
 
     u32 hash = hash_func_m(key, key_size);
     u32 idx = hash >> (32 - map->size_log2);
-    u8 extra = hash_extra(hash);
+    u8 extra = hm_hash_extra(hash);
     struct hm_entry_t new = { key, value, key_size, val_size, extra, alloc_flag };
     int rc = insert(&map->buckets[idx], &new);
 
