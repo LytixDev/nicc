@@ -531,6 +531,7 @@ bool darr_rmv(struct darr_t *da, void *val, size_t size)
             return darr_rm(da, i);
         }
     }
+    return false;
 }
 
 void *darr_pop(struct darr_t *da)
@@ -777,6 +778,8 @@ bool ht_rm(struct ht_t *ht, void *key, size_t key_size)
         item = prev->next;
         i++;
     }
+
+    return false;
 }
 
 size_t ht_get_len(struct ht_t *ht)
