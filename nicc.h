@@ -39,7 +39,7 @@
 #define HM_OVERFLOW_SIZE 4
 #define N_BUCKETS(log2) (1 << (log2))
 
-/* hashmap functions */
+/* hashmap */
 /*
  * Quick note on the hashmap:
  * The hashmap impl. is a pretty standard dynamically growing hashmap. Every bucket stores 6 entries
@@ -98,7 +98,13 @@ bool hashmap_rm(struct hashmap_t *map, void *key, u32 key_size);
 #define hashmap_srm(map, key) \
     hashmap_rm(map, key, (strlen(key) + 1) * sizeof(char))
 
-/* darr functions */
+/* darr */
+struct darr_t {
+    void **data;
+    size_t size;
+    size_t cap;
+};
+
 struct darr_t *darr_malloc(void);
 void darr_free(struct darr_t *da);
 /*
@@ -456,12 +462,6 @@ void hashmap_free(struct hashmap_t *map)
 #ifdef NICC_DARR_IMPLEMENTATION
 
 /* darr implementation */
-struct darr_t {
-    void **data;
-    size_t size;
-    size_t cap;
-};
-
 struct darr_t *darr_malloc(void)
 {
     struct darr_t *da = (struct darr_t *)malloc(sizeof(struct darr_t));
