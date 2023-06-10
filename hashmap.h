@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -61,6 +61,10 @@ struct hm_entry_t {
 struct hm_bucket_t {
     struct hm_entry_t entries[HM_BUCKET_SIZE];
 };
+
+#ifdef NICC_TYPEDEF
+typedef struct hashmap_t HashMap;
+#endif /* NICC_TYPEDEF */
 
 struct hashmap_t {
     struct hm_bucket_t *buckets;

@@ -23,7 +23,12 @@
 struct arraylist_t *arraylist_alloc(void)
 {
     struct arraylist_t *da = (struct arraylist_t *)malloc(sizeof(struct arraylist_t));
+    arraylist_init(da);
+    return da;
+}
 
+void arraylist_init(struct arraylist_t *da)
+{
 #ifdef DARR_STARTING_CAP
     da->cap = DARR_STARTING_CAP;
 #else
@@ -33,9 +38,8 @@ struct arraylist_t *arraylist_alloc(void)
 
     da->size = 0;
     da->data = (void **)malloc(sizeof(void *) * da->cap);
-
-    return da;
 }
+
 
 void arraylist_free(struct arraylist_t *da)
 {

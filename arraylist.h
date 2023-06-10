@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand 
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #ifdef NICC_TYPEDEF
 typedef struct arraylist_t ArrayList;
 #endif /* NICC_TYPEDEF */
+
 struct arraylist_t {
     void **data;
     size_t size;
