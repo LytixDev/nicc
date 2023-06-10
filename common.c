@@ -14,25 +14,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include <string.h>
-#include <assert.h>
+#include <stdlib.h>
 
-#include "../hashmap.h"
-
-void foo(struct hashmap_t *map)
+void *nicc_internal_realloc(void *ptr, size_t new_size)
 {
-    hashmap_ssput(map, "key", "value", true);
-}
+    void *res = realloc(ptr, new_size);
+    //TODO: better error handling
+    if (res == NULL)
+        exit(1);
 
-int main()
-{
-    struct hashmap_t map;
-    hashmap_init(&map);
-
-    foo(&map);
-
-    void *v = hashmap_sget(&map, "key");
-
-    assert(strcmp((char *)v, "value") == 0);
-    hashmap_free(&map);
+    return res;
 }
