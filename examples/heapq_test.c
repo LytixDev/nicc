@@ -26,7 +26,7 @@ int main()
     struct tuple_t c = { .name = "fourth", .precedence = 4 };
     struct tuple_t d = { .name = "third", .precedence = 3 };
 
-    struct heapq_t *queue = heapq_malloc(tuple_compare);
+    struct heapq_t *queue = heapq_alloc(tuple_compare);
     heapq_push(queue, &a);
     heapq_push(queue, &b);
     heapq_push(queue, &c);
