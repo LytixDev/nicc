@@ -11,7 +11,7 @@ Generic types for C11.
 \* hashmap implementation mirrors https://github.com/DHPS-Solutions/dhps-lib/blob/main/hashmap.c
 
 ### Setup
-The easiest is to head over to the `stb` branch, clone or copy the file and include the header file into your C project:
+The easiest is to head over to the `stb` branch, clone or copy the `nicc.h` file and include the header file into your C project:
 ```c
 #define NICC_IMPLEMENTATION
 #include "nicc.h"
