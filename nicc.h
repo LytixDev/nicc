@@ -51,9 +51,7 @@ void *nicc_internal_realloc(void *ptr, size_t new_size);
 /* 
  * arraylist 
  */
-#ifdef NICC_TYPEDEF
 typedef struct arraylist_t ArrayList;
-#endif /* NICC_TYPEDEF */
 
 struct arraylist_t {
     void *data;
@@ -118,9 +116,7 @@ struct hm_bucket_t {
     struct hm_entry_t entries[HM_BUCKET_SIZE];
 };
 
-#ifdef NICC_TYPEDEF
 typedef struct hashmap_t HashMap;
-#endif /* NICC_TYPEDEF */
 
 struct hashmap_t {
     struct hm_bucket_t *buckets;
