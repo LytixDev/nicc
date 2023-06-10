@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022 Nicolai Brand
+ *  Copyright (C) 2022-2023 Nicolai Brand
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,25 +14,25 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include <assert.h>
-#include <string.h>
+#ifndef NICC_COMMON_H
+#define NICC_COMMON_H
 
-#include "../hashmap.h"
+#include <stdint.h>
+#include <stdlib.h>
 
-void foo(struct hashmap_t *map)
-{
-    hashmap_ssput(map, "key", "value", true);
-}
+#ifndef u8
+#define u8 uint8_t
+#endif
+#ifndef u32
+#define u32 uint32_t
+#endif
 
-int main()
-{
-    struct hashmap_t map;
-    hashmap_init(&map);
+#define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
-    foo(&map);
+#define GROW_ARRAY(type, pointer, new_size) \
+    (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
 
-    void *v = hashmap_sget(&map, "key");
+/* internal function definitions */
+void *nicc_internal_realloc(void *ptr, size_t new_size);
 
-    assert(strcmp((char *)v, "value") == 0);
-    hashmap_free(&map);
-}
+#endif /* NICC_COMMON_H */
