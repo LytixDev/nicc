@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,12 +16,11 @@
  */
 #include <stdlib.h>
 
-void *nicc_internal_realloc(void *ptr, size_t new_size)
-{
-    void *res = realloc(ptr, new_size);
-    //TODO: better error handling
-    if (res == NULL)
-        exit(1);
+void *nicc_internal_realloc(void *ptr, size_t new_size) {
+  void *res = realloc(ptr, new_size);
+  // TODO: better error handling
+  if (res == NULL)
+    exit(1);
 
-    return res;
+  return res;
 }

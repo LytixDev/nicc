@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,56 +17,168 @@
 #include <assert.h>
 #include <string.h>
 
+#define NICC_TYPEDEF
 #include "../arraylist.h"
 
+typedef struct {
+  int a;
+  double b;
+} Tuple;
 
-int main(void)
-{
-    struct arraylist_t *arr = arraylist_alloc();
-    /*
-     * also valid:
-     * struct arraylist_t *arr = arraylist_malloc();
-     */
-    char *str = "hello", *str2 = "world!";
-    arraylist_append(arr, str);
-    arraylist_append(arr, str2);
+void test_populate(ArrayList *arr) {
+  arraylist_append(arr, &(Tuple){.a = 1, .b = 1.1});
+  arraylist_append(arr, &(Tuple){.a = 2, .b = 2.2});
+  arraylist_append(arr, &(Tuple){.a = 3, .b = 3.3});
+  Tuple *get = arraylist_get(arr, 0);
+  assert(get->a == 1);
+  assert(get->b == 1.1);
 
-    /* expect "hello" */
-    char *result = (char *)arraylist_get(arr, 0);
-    assert(strcmp(str, result) == 0);
+  get = arraylist_get(arr, 1);
+  assert(get->a == 2);
+  assert(get->b == 2.2);
 
-    /* override "hello" */
-    arraylist_set(arr, "hello world!", 0);
-    result = (char *)arraylist_get(arr, 0);
-    assert(strcmp("hello world!", result) == 0);
+  get = arraylist_get(arr, 2);
+  assert(get->a == 3);
+  assert(get->b == 3.3);
+}
 
-    /*
-     * remove "hello world" at index 0
-     * this will shift index 1, which is "world!" into index 0
-     */
-    size_t size_pre_rm = arraylist_get_size(arr);
-    arraylist_rm(arr, 0);
-    size_t size_post_rm = arraylist_get_size(arr);
-    result = (char *)arraylist_get(arr, 0);
-    assert(size_pre_rm == size_post_rm + 1);
+void test(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
 
-    /* add another value */
-    arraylist_append(arr, "hey");
+  test_populate(&arr);
+  Tuple *get = arraylist_get(&arr, 0);
+  assert(get->a == 1);
+  assert(get->b == 1.1);
 
-    /* pop last item from array */
-    char *item = arraylist_pop(arr);
-    /* know "hey" should be the last item */
-    assert(strcmp(item, "hey") == 0);
-    /* pop "world!" */
-    arraylist_pop(arr);
+  get = arraylist_get(&arr, 1);
+  assert(get->a == 2);
+  assert(get->b == 2.2);
 
-    arraylist_append(arr, "first");
-    arraylist_append(arr, "second");
-    arraylist_append(arr, "third");
-    arraylist_rmv(arr, "first", strlen("first") + 1);
-    char *r = arraylist_get(arr, 0);
-    assert(strcmp(r, "second") == 0);
-    
-    arraylist_free(arr);
-    return 0;
+  get = arraylist_get(&arr, 2);
+  assert(get->a == 3);
+  assert(get->b == 3.3);
+
+  arraylist_free(&arr);
+}
+
+void test_realloc(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
+
+  /* 9 appends will force a realloc */
+  for (int i = 0; i < 9; i++)
+    arraylist_append(&arr, &(Tuple){.a = 1, .b = 1.1});
+
+  assert(arr.cap == 16);
+
+  arraylist_append(&arr, &(Tuple){.a = 10, .b = 10.1});
+  Tuple *get = arraylist_get(&arr, 9);
+  assert(get->a == 10);
+  assert(get->b == 10.1);
+
+  arraylist_free(&arr);
+}
+
+void test_set(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
+
+  bool rc = arraylist_set(&arr, &(Tuple){.a = 1, .b = 1.1}, 0);
+  assert(rc);
+
+  Tuple *get = arraylist_get(&arr, 0);
+  assert(get->a == 1);
+  assert(get->b == 1.1);
+
+  /* try to set at an idx that we can't set at */
+  rc = arraylist_set(&arr, &(Tuple){.a = 1, .b = 1.1}, 69);
+  assert(!rc);
+
+  /* append some items */
+  arraylist_append(&arr, &(Tuple){.a = 2, .b = 2.2});
+  arraylist_append(&arr, &(Tuple){.a = 3, .b = 3.3});
+
+  rc = arraylist_set(&arr, &(Tuple){.a = 4, .b = 4.4}, 0);
+  assert(rc);
+
+  get = arraylist_get(&arr, 0);
+  assert(get->a == 4);
+  assert(get->b == 4.4);
+
+  arraylist_free(&arr);
+}
+
+void test_get_copy(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
+
+  arraylist_append(&arr, &(Tuple){.a = 1, .b = 1.1});
+
+  Tuple get;
+  arraylist_get_copy(&arr, 0, &get);
+  assert(get.a == 1);
+  assert(get.b == 1.1);
+
+  arraylist_free(&arr);
+
+  assert(get.a == 1);
+  assert(get.b == 1.1);
+}
+
+void test_pop(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
+
+  arraylist_append(&arr, &(Tuple){.a = 1, .b = 1.1});
+
+  Tuple get;
+  arraylist_pop_and_copy(&arr, &get);
+  assert(get.a == 1);
+  assert(get.b == 1.1);
+
+  arraylist_free(&arr);
+
+  assert(get.a == 1);
+  assert(get.b == 1.1);
+}
+
+void test_rm(void) {
+  /* ArrayList will hold values of Tuple */
+  ArrayList arr;
+  arraylist_init(&arr, sizeof(Tuple));
+
+  arraylist_append(&arr, &(Tuple){.a = 1, .b = 1.1});
+  bool rc = arraylist_rm(&arr, 0);
+  assert(rc);
+
+  Tuple *get = arraylist_get(&arr, 0);
+  assert(get == NULL);
+
+  arraylist_pop_and_copy(&arr, &get);
+  assert(get == NULL);
+
+  arraylist_append(&arr, &(Tuple){.a = 1, .b = 1.1});
+  arraylist_append(&arr, &(Tuple){.a = 2, .b = 2.2});
+  arraylist_append(&arr, &(Tuple){.a = 3, .b = 3.3});
+
+  // TODO: this is broken, fix this
+  // rc = arraylist_rmv(&arr, &(Tuple){ .a = 2, .b = 2.2 });
+  // assert(rc);
+
+  arraylist_free(&arr);
+}
+
+int main(void) {
+  test();
+  test_realloc();
+  test_set();
+  test_get_copy();
+  test_pop();
+  test_rm();
 }

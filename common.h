@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand 
+ *  Copyright (C) 2022-2023 Nicolai Brand
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,18 +21,16 @@
 #include <stdlib.h>
 
 #ifndef u8
-#  define u8 uint8_t
+#define u8 uint8_t
 #endif
 #ifndef u32
-#  define u32 uint32_t
+#define u32 uint32_t
 #endif
 
-#define GROW_CAPACITY(capacity) \
-    ((capacity) < 8 ? 8 : (capacity) * 2)
+#define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
-#define GROW_ARRAY(type, pointer, new_size) \
-    (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
-
+#define GROW_ARRAY(type, pointer, new_size)                                    \
+  (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
 
 /* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size);
