@@ -16,11 +16,12 @@
  */
 #include <stdlib.h>
 
-void *nicc_internal_realloc(void *ptr, size_t new_size) {
-  void *res = realloc(ptr, new_size);
-  // TODO: better error handling
-  if (res == NULL)
-    exit(1);
+void *nicc_internal_realloc(void *ptr, size_t new_size)
+{
+    void *res = realloc(ptr, new_size);
+    // TODO: better error handling
+    if (res == NULL)
+	exit(1);
 
-  return res;
+    return res;
 }

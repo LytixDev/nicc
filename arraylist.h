@@ -27,10 +27,10 @@ typedef struct arraylist_t ArrayList;
 #endif /* NICC_TYPEDEF */
 
 struct arraylist_t {
-  void *data;
-  u32 T_size;
-  size_t size;
-  size_t cap;
+    void *data;
+    u32 T_size;
+    size_t size;
+    size_t cap;
 };
 
 void arraylist_init(struct arraylist_t *arr, u32 T_size);

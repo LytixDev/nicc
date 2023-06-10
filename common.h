@@ -29,8 +29,8 @@
 
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
-#define GROW_ARRAY(type, pointer, new_size)                                    \
-  (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
+#define GROW_ARRAY(type, pointer, new_size) \
+    (type *)nicc_internal_realloc((pointer), sizeof(type) * (new_size))
 
 /* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size);

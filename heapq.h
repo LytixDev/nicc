@@ -33,10 +33,10 @@ typedef bool(nicc_hq_compare_func)(void *a, void *b);
 
 /* heap queue inspired by: https://docs.python.org/3/library/heapq.html */
 struct heapq_t {
-  void **items;
-  int size;
-  int capacity;
-  nicc_hq_compare_func *cmp;
+    void **items;
+    int size;
+    int capacity;
+    nicc_hq_compare_func *cmp;
 };
 
 /* heapq functions */
