@@ -28,12 +28,12 @@ typedef struct arraylist_t ArrayList;
 
 struct arraylist_t {
     void *data;
-    u32 T_size;
+    size_t T_size;
     size_t size;
     size_t cap;
 };
 
-void arraylist_init(struct arraylist_t *arr, u32 T_size);
+void arraylist_init(struct arraylist_t *arr, size_t T_size);
 void arraylist_free(struct arraylist_t *arr);
 
 bool arraylist_set(struct arraylist_t *arr, void *val, size_t idx);
@@ -43,8 +43,13 @@ void *arraylist_get(struct arraylist_t *arr, size_t idx);
 void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
 void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
+i32 arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+i32 arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+
 bool arraylist_rm(struct arraylist_t *arr, size_t idx);
-bool arraylist_rmv(struct arraylist_t *arr, void *val);
+bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+
+bool arraylist_sort(struct arraylist_t *arr, commpare_fn_t *cmp);
 
 ///*
 // * appends the given value parameter to the end of the array.
