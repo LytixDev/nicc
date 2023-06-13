@@ -6,7 +6,7 @@ Generic types for C11.
 - [x] dynamic array (arraylist_t / ArrayList)
 - [x] heap queue (heapq_t)
 - [ ] circular queue
-- [ ] stack
+- [x] stack (stack_t)
 
 \* hashmap implementation mirrors https://github.com/DHPS-Solutions/dhps-lib/blob/main/hashmap.c
 
