@@ -49,7 +49,7 @@ i32 arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 bool arraylist_rm(struct arraylist_t *arr, size_t idx);
 bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 
-bool arraylist_sort(struct arraylist_t *arr, commpare_fn_t *cmp);
+bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp);
 
 ///*
 // * appends the given value parameter to the end of the array.

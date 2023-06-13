@@ -12,7 +12,7 @@ BENCHSRCS := $(shell find $(TESTDIR) -type f -name "*.c")
 OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
 BENCHOBJS := $(BENCHSRCS:%.c=$(OBJDIR)/%.o)
 
-CFLAGS = -Iinclude -Wall -Wextra -Wshadow -std=c11
+CFLAGS = -Iinclude -Wall -Wextra -Wshadow -std=c11 -g
 
 .PHONY: format clean tags bear $(OBJDIR)
 TARGET_ARRAYLIST_TEST = arraylist_test

@@ -165,7 +165,7 @@ bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq)
     return false;
 }
 
-bool arraylist_sort(struct arraylist_t *arr, commpare_fn_t *cmp)
+bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp)
 {
     if (arr->size == 0)
 	return false;
