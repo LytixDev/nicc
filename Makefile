@@ -12,15 +12,16 @@ BENCHSRCS := $(shell find $(TESTDIR) -type f -name "*.c")
 OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
 BENCHOBJS := $(BENCHSRCS:%.c=$(OBJDIR)/%.o)
 
-CFLAGS = -Iinclude -Wall -Wextra -Wshadow -std=c11 -g
+CFLAGS = -Iinclude -Wall -Wextra -Wshadow -std=c11
 
 .PHONY: format clean tags bear $(OBJDIR)
 TARGET_ARRAYLIST_TEST = arraylist_test
 TARGET_HASHMAP_TEST = hashmap_test 
 TARGET_HEAPQ_TEST = heapq_test
+TARGET_STACK_TEST = stack_test
 
 clean:
-	rm -rf $(OBJDIR) $(TARGET_ARRAYLIST_TEST) $(TARGET_HASHMAP_TEST) $(TARGET_HEAPQ_TEST)
+	rm -rf $(OBJDIR) $(TARGET_ARRAYLIST_TEST) $(TARGET_HASHMAP_TEST) $(TARGET_HEAPQ_TEST) $(TARGET_STACK_TEST)
 
 tags:
 	@ctags -R
@@ -39,6 +40,9 @@ hashmap_test:
 
 heapq_test:
 	$(CC) ./heapq.c ./common.c ./examples/heapq_test.c $(CFLAGS) -o $(TARGET_HEAPQ_TEST)
+
+stack_test:
+	$(CC) ./stack.c ./common.c ./examples/stack_test.c $(CFLAGS) -o $(TARGET_STACK_TEST)
 
 $(OBJDIR):
 	$(foreach dir, $(DIRS), $(shell mkdir -p $(OBJDIR)/$(dir)))

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand
+ *  Copyright (C) 2022-2023 Nicolai Brand, Callum Gran
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 #ifndef NICC_COMMON_H
 #define NICC_COMMON_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
