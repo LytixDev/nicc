@@ -17,8 +17,8 @@
 #ifndef NICC_HEAPQ_H
 #define NICC_HEAPQ_H
 
-#include <stdbool.h>
 #include "common.h"
+#include <stdbool.h>
 
 #define HEAPQ_STARTING_CAPACITY 32
 
@@ -50,6 +50,6 @@ void *heapq_get(struct heapq_t *hq, int idx);
  */
 void *heapq_pop(struct heapq_t *hq);
 
-void heap_sort(const void *base, size_t nmemb, size_t size, compare_fn_t *cmp); 
+void heap_sort(const void *base, size_t nmemb, size_t size, compare_fn_t *cmp);
 
 #endif /* NICC_HEAPQ_H */

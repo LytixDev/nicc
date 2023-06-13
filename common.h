@@ -43,16 +43,16 @@ typedef i32 compare_fn_t(const void *, const void *);
 
 typedef bool equality_fn_t(const void *, const void *);
 
-#define BYTE_SWAP(a, b, size)                       \
-    do {                                            \
-        size_t __size = (size);                     \
-        register unsigned char *__a = (a);          \
-        register unsigned char *__b = (b);          \
-        do {                                        \
-	        register unsigned char __tmp = *__a;    \
-	        *__a++ = *__b;                          \
-	        *__b++ = __tmp;                         \
-	    } while (--__size > 0);                     \
+#define BYTE_SWAP(a, b, size)                    \
+    do {                                         \
+	size_t __size = (size);                  \
+	register unsigned char *__a = (a);       \
+	register unsigned char *__b = (b);       \
+	do {                                     \
+	    register unsigned char __tmp = *__a; \
+	    *__a++ = *__b;                       \
+	    *__b++ = __tmp;                      \
+	} while (--__size > 0);                  \
     } while (0)
 
 #endif /* NICC_COMMON_H */

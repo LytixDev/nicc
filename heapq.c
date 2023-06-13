@@ -61,7 +61,7 @@ static void heapify_down(struct heapq_t *hq)
 	min_idx = heapq_left_child_idx(idx);
 	if (heapq_has_right(idx, hq->size) &&
 	    hq->cmp(hq->items[min_idx], heapq_right_child(hq, idx)) > 0)
-            min_idx = heapq_right_child_idx(idx);
+	    min_idx = heapq_right_child_idx(idx);
 
 	if (hq->cmp(hq->items[min_idx], hq->items[idx]) > 0) {
 	    break;
@@ -123,17 +123,17 @@ static void heap_sort_internal(u8 *left, u8 *right, size_t size, compare_fn_t cm
     u8 elems[(right - left) / size][size];
     u32 i = 0;
     while (p <= right) {
-        memcpy(*(elems + i), p, size);
-        heapq_push(&heap, *(elems + i++));
-        p += size;
+	memcpy(*(elems + i), p, size);
+	heapq_push(&heap, *(elems + i++));
+	p += size;
     }
 
     p = right;
 
     while (p >= left) {
-        u8 *elem = (u8 *)heapq_pop(&heap);
-        BYTE_SWAP(p, elem, size);
-        p -= size;
+	u8 *elem = (u8 *)heapq_pop(&heap);
+	BYTE_SWAP(p, elem, size);
+	p -= size;
     }
 
     heapq_free(&heap);
@@ -142,8 +142,8 @@ static void heap_sort_internal(u8 *left, u8 *right, size_t size, compare_fn_t cm
 void heap_sort(const void *base, size_t nmemb, size_t size, compare_fn_t cmp)
 {
     if (!nmemb)
-        return;
-    
+	return;
+
     u8 *base_ptr = (u8 *)base;
     u8 *left_ptr = base_ptr;
     u8 *right_ptr = base_ptr + size * (nmemb - 1);

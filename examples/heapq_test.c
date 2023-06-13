@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../heapq.h"
 #include "../common.h"
+#include "../heapq.h"
 
 /*
  * type we want to store in the heapq, using precedence as the
