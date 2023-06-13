@@ -6,9 +6,10 @@ Generic types for C11.
 - [x] dynamic array (arraylist_t / ArrayList)
 - [x] heap queue (heapq_t)
 - [ ] circular queue
-- [x] stack (stack_t)
+- [x] stack (stack_t)*
 
 \* hashmap implementation mirrors https://github.com/DHPS-Solutions/dhps-lib/blob/main/hashmap.c
+\* stack implementation is based on https://github.com/DHPS-Solutions/dhps-lib/blob/main/stack.c
 
 ### Setup
 The easiest is to head over to the `stb` branch, clone or copy the `nicc.h` file and include the header file into your C project:
