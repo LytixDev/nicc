@@ -27,6 +27,10 @@
 #define u32 uint32_t
 #endif
 
+#ifndef i32
+#define i32 int32_t
+#endif
+
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
 #define GROW_ARRAY(type, pointer, new_size) \
@@ -34,5 +38,9 @@
 
 /* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size);
+
+typedef i32 commpare_fn_t(const void *, const void *);
+
+typedef bool equality_fn_t(const void *, const void *);
 
 #endif /* NICC_COMMON_H */
