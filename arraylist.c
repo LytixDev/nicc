@@ -22,7 +22,7 @@
 #include "common.h"
 
 /* arraylist implementation */
-void arraylist_init(struct arraylist_t *arr, size_t T_size)
+void arraylist_init(struct arraylist_t *arr, u32 T_size)
 {
 #ifdef DARR_STARTING_CAP
     da->cap = DARR_STARTING_CAP;

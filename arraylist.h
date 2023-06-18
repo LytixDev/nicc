@@ -28,12 +28,12 @@ typedef struct arraylist_t ArrayList;
 
 struct arraylist_t {
     void *data;
-    size_t T_size;
+    u32 T_size;
     size_t size;
     size_t cap;
 };
 
-void arraylist_init(struct arraylist_t *arr, size_t T_size);
+void arraylist_init(struct arraylist_t *arr, u32 T_size);
 void arraylist_free(struct arraylist_t *arr);
 
 bool arraylist_set(struct arraylist_t *arr, void *val, size_t idx);
