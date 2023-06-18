@@ -32,6 +32,10 @@
 #define i32 int32_t
 #endif
 
+#ifndef NICC_NOT_FOUND
+#define NICC_NOT_FOUND SIZE_MAX
+#endif
+
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
 #define GROW_ARRAY(type, pointer, new_size) \

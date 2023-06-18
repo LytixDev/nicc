@@ -62,3 +62,4 @@ dkms.conf
 arraylist_test
 hashmap_test
 heapq_test
+stack_test

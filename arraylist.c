@@ -112,23 +112,23 @@ void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
     arraylist_rm(arr, arr->size - 1);
 }
 
-i32 arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
+size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 {
     if (val == NULL)
-	return -1;
+	return NICC_NOT_FOUND;
     for (size_t i = 0; i < arr->size; i++) {
 	if (eq(get_element(arr, i), val)) {
 	    return i;
 	}
     }
 
-    return -1;
+    return NICC_NOT_FOUND;
 }
 
-i32 arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq)
+size_t arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 {
     if (val == NULL)
-	return -1;
+	return NICC_NOT_FOUND;
 
     for (ssize_t i = (ssize_t)arr->size - 1; i >= 0; i--) {
 	if (eq(get_element(arr, i), val)) {
@@ -136,7 +136,7 @@ i32 arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 	}
     }
 
-    return -1;
+    return NICC_NOT_FOUND;
 }
 
 bool arraylist_rm(struct arraylist_t *arr, size_t idx)

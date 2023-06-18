@@ -43,8 +43,8 @@ void *arraylist_get(struct arraylist_t *arr, size_t idx);
 void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
 void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
-i32 arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
-i32 arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+size_t arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 
 bool arraylist_rm(struct arraylist_t *arr, size_t idx);
 bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq);
