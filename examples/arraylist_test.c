@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand
+ *  Copyright (C) 2022-2023 Nicolai Brand, Callum Gran
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,30 @@ typedef struct {
     int a;
     double b;
 } Tuple;
+
+static inline i32 tuple_int_cmp(const void *a, const void *b)
+{
+    const Tuple *t1 = a;
+    const Tuple *t2 = b;
+
+    return t1->a - t2->a;
+}
+
+static inline i32 tuple_double_cmp(const void *a, const void *b)
+{
+    const Tuple *t1 = a;
+    const Tuple *t2 = b;
+
+    return (int)((1000) * (t1->b - t2->b));
+}
+
+static inline bool tuple_equal(const void *a, const void *b)
+{
+    const Tuple *t1 = a;
+    const Tuple *t2 = b;
+
+    return t1->a == t2->a && t1->b == t2->b;
+}
 
 void test_populate(ArrayList *arr)
 {
@@ -174,9 +198,106 @@ void test_rm(void)
     arraylist_append(&arr, &(Tuple){ .a = 2, .b = 2.2 });
     arraylist_append(&arr, &(Tuple){ .a = 3, .b = 3.3 });
 
-    // TODO: this is broken, fix this
-    // rc = arraylist_rmv(&arr, &(Tuple){ .a = 2, .b = 2.2 });
-    // assert(rc);
+    rc = arraylist_rmv(&arr, &(Tuple){ .a = 2, .b = 2.2 }, tuple_equal);
+    assert(rc);
+
+    arraylist_free(&arr);
+}
+
+void test_index_of(void)
+{
+    /* ArrayList will hold values of Tuple */
+    ArrayList arr;
+    arraylist_init(&arr, sizeof(Tuple));
+
+    arraylist_append(&arr, &(Tuple){ .a = 3, .b = 1.1 });
+    arraylist_append(&arr, &(Tuple){ .a = 2, .b = 2.2 });
+    arraylist_append(&arr, &(Tuple){ .a = 1, .b = 3.3 });
+
+    Tuple *get = arraylist_get(&arr, 0);
+    assert(get->a == 3);
+
+    get = arraylist_get(&arr, 1);
+    assert(get->a == 2);
+
+    get = arraylist_get(&arr, 2);
+    assert(get->a == 1);
+
+    i32 idx = arraylist_index_of(&arr, &(Tuple){ .a = 2, .b = 2.2 }, tuple_equal);
+
+    assert(idx == 1);
+
+    arraylist_free(&arr);
+}
+
+void test_index_of_r(void)
+{
+    /* ArrayList will hold values of Tuple */
+    ArrayList arr;
+    arraylist_init(&arr, sizeof(Tuple));
+
+    arraylist_append(&arr, &(Tuple){ .a = 3, .b = 1.1 });
+    arraylist_append(&arr, &(Tuple){ .a = 2, .b = 2.2 });
+    arraylist_append(&arr, &(Tuple){ .a = 1, .b = 3.3 });
+
+    Tuple *get = arraylist_get(&arr, 0);
+    assert(get->a == 3);
+
+    get = arraylist_get(&arr, 1);
+    assert(get->a == 2);
+
+    get = arraylist_get(&arr, 2);
+    assert(get->a == 1);
+
+    i32 idx = arraylist_index_of_r(&arr, &(Tuple){ .a = 2, .b = 2.2 }, tuple_equal);
+
+    assert(idx == 1);
+
+    arraylist_free(&arr);
+}
+
+void test_sort(void)
+{
+    /* ArrayList will hold values of Tuple */
+    ArrayList arr;
+    arraylist_init(&arr, sizeof(Tuple));
+
+    arraylist_append(&arr, &(Tuple){ .a = 3, .b = 1.1 });
+    arraylist_append(&arr, &(Tuple){ .a = 2, .b = 2.2 });
+    arraylist_append(&arr, &(Tuple){ .a = 1, .b = 3.3 });
+
+    Tuple *get = arraylist_get(&arr, 0);
+    assert(get->a == 3);
+
+    get = arraylist_get(&arr, 1);
+    assert(get->a == 2);
+
+    get = arraylist_get(&arr, 2);
+    assert(get->a == 1);
+
+    bool rc = arraylist_sort(&arr, tuple_int_cmp);
+    assert(rc);
+
+    get = arraylist_get(&arr, 0);
+    assert(get->a == 1);
+
+    get = arraylist_get(&arr, 1);
+    assert(get->a == 2);
+
+    get = arraylist_get(&arr, 2);
+    assert(get->a == 3);
+
+    rc = arraylist_sort(&arr, tuple_double_cmp);
+    assert(rc);
+
+    get = arraylist_get(&arr, 0);
+    assert(get->b == 1.1);
+
+    get = arraylist_get(&arr, 1);
+    assert(get->b == 2.2);
+
+    get = arraylist_get(&arr, 2);
+    assert(get->b == 3.3);
 
     arraylist_free(&arr);
 }
@@ -189,4 +310,5 @@ int main(void)
     test_get_copy();
     test_pop();
     test_rm();
+    test_sort();
 }

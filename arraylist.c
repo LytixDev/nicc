@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023 Nicolai Brand
+ *  Copyright (C) 2022-2023 Nicolai Brand, Callum Gran
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -112,6 +112,33 @@ void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
     arraylist_rm(arr, arr->size - 1);
 }
 
+size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
+{
+    if (val == NULL)
+	return NICC_NOT_FOUND;
+    for (size_t i = 0; i < arr->size; i++) {
+	if (eq(get_element(arr, i), val)) {
+	    return i;
+	}
+    }
+
+    return NICC_NOT_FOUND;
+}
+
+size_t arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq)
+{
+    if (val == NULL)
+	return NICC_NOT_FOUND;
+
+    for (ssize_t i = (ssize_t)arr->size - 1; i >= 0; i--) {
+	if (eq(get_element(arr, i), val)) {
+	    return i;
+	}
+    }
+
+    return NICC_NOT_FOUND;
+}
+
 bool arraylist_rm(struct arraylist_t *arr, size_t idx)
 {
     if (idx > arr->size)
@@ -124,25 +151,28 @@ bool arraylist_rm(struct arraylist_t *arr, size_t idx)
     return true;
 }
 
-static bool element_eq(void *a, void *b, size_t size)
+bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 {
-    // TODO: using int here would be faster I think
-    // TODO: this is broken idk why
-    u8 *A = a;
-    u8 *B = b;
+    if (val == NULL)
+	return false;
 
-    for (size_t i = 0; i < size; i++) {
-	if (A[i] != B[i])
-	    return false;
+    for (size_t i = 0; i < arr->size; i++) {
+	if (eq(get_element(arr, i), val)) {
+	    return arraylist_rm(arr, i);
+	}
     }
-    return true;
+
+    return false;
 }
 
-bool arraylist_rmv(struct arraylist_t *arr, void *val)
+bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp)
 {
-    for (size_t i = 0; i < arr->size; i++) {
-	if (element_eq(get_element(arr, i), val, arr->T_size))
-	    return arraylist_rm(arr, i);
-    }
-    return false;
+    if (arr->size == 0)
+	return false;
+
+    if (arr->size == 1)
+	return true;
+
+    qsort(arr->data, arr->size, arr->T_size, cmp);
+    return true;
 }
