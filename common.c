@@ -15,6 +15,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
+#include <stdbool.h>
+
+#include "common.h"
 
 void *nicc_internal_realloc(void *ptr, size_t new_size)
 {
@@ -25,3 +28,18 @@ void *nicc_internal_realloc(void *ptr, size_t new_size)
 
     return res;
 }
+
+bool nicc_data_eq(void *a, void *b, u32 T_size)
+{
+    /* bytewise comparison */
+    u8 A;
+    u8 B;
+    for (size_t i = 0; i < (size_t)T_size; i++) {
+        A = ((u8 *)a)[i];
+        B = ((u8 *)b)[i];
+        if (A != B)
+            return false;
+    }
+    return true;
+}
+

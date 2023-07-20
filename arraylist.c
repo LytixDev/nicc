@@ -125,20 +125,6 @@ size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
     return NICC_NOT_FOUND;
 }
 
-size_t arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq)
-{
-    if (val == NULL)
-	return NICC_NOT_FOUND;
-
-    for (ssize_t i = (ssize_t)arr->size - 1; i >= 0; i--) {
-	if (eq(get_element(arr, i), val)) {
-	    return i;
-	}
-    }
-
-    return NICC_NOT_FOUND;
-}
-
 bool arraylist_rm(struct arraylist_t *arr, size_t idx)
 {
     if (idx > arr->size)
