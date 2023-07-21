@@ -23,9 +23,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-//#ifdef HASHMAP_THREAD_SAFE
-//#  include <pthread.h>
-//#endif
+#include <sys/types.h>
 
 /* 
  * common 
@@ -37,6 +35,14 @@
 #define u32 uint32_t
 #endif
 
+#ifndef i32
+#define i32 int32_t
+#endif
+
+#ifndef NICC_NOT_FOUND
+#define NICC_NOT_FOUND SIZE_MAX
+#endif
+
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
 
 #define GROW_ARRAY(type, pointer, new_size) \
@@ -44,12 +50,31 @@
 
 /* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size);
-/* 
+
+bool nicc_data_eq(void *a, void *b, u32 T_size);
+
+typedef i32 compare_fn_t(const void *, const void *);
+
+typedef bool equality_fn_t(const void *, const void *);
+
+
+#define BYTE_SWAP(a, b, size)                    \
+    do {                                         \
+	size_t __size = (size);                  \
+	register unsigned char *__a = (a);       \
+	register unsigned char *__b = (b);       \
+	do {                                     \
+	    register unsigned char __tmp = *__a; \
+	    *__a++ = *__b;                       \
+	    *__b++ = __tmp;                      \
+	} while (--__size > 0);                  \
+    } while (0)
+/*
  * common end
  */
 
-/* 
- * arraylist 
+/*
+ * arraylist
  */
 typedef struct arraylist_t ArrayList;
 
@@ -70,15 +95,24 @@ void *arraylist_get(struct arraylist_t *arr, size_t idx);
 void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
 void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
+size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+
 bool arraylist_rm(struct arraylist_t *arr, size_t idx);
-bool arraylist_rmv(struct arraylist_t *arr, void *val);
-/* 
+bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq);
+
+bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp);
+/*
  * arraylist end
  */
 
-/* 
+/*
  * hashmap
  */
+/* return codes for insert() function */
+#define _HM_FULL 1
+#define _HM_OVERRIDE 2
+#define _HM_SUCCESS 3
+
 #define HM_STARTING_BUCKETS_LOG2 3 // the amount of starting buckets
 #define HM_BUCKET_SIZE 6
 #define HM_OVERFLOW_SIZE 4
@@ -144,73 +178,145 @@ void *hashmap_get(struct hashmap_t *map, void *key, u32 key_size);
 
 bool hashmap_rm(struct hashmap_t *map, void *key, u32 key_size);
 #define hashmap_srm(map, key) hashmap_rm(map, key, (strlen(key) + 1) * sizeof(char))
-/* 
+/*
  * hashmap end
  */
 
-/* 
+/*
  * heapq
  */
-/* compares priority of items in heapqueue. I:E: is a > b ? */
-typedef bool(nicc_hq_compare_func)(void *a, void *b);
-
 /* heap queue inspired by: https://docs.python.org/3/library/heapq.html */
 struct heapq_t {
     void **items;
     int size;
     int capacity;
-    nicc_hq_compare_func *cmp;
+    compare_fn_t *cmp;
 };
 
 /* heapq functions */
-struct heapq_t *heapq_alloc(nicc_hq_compare_func *cmp);
+void heapq_init(struct heapq_t *hq, compare_fn_t *cmp);
 void heapq_free(struct heapq_t *hq);
 void heapq_push(struct heapq_t *hq, void *item);
 void *heapq_get(struct heapq_t *hq, int idx);
+
 /*
  * returns and removes the item at the top of the heap queue.
  * note: remember to free() the popped item after use if it was malloced before
  * pushing into the heapq.
  */
 void *heapq_pop(struct heapq_t *hq);
-/* 
+
+void heap_sort(const void *base, size_t nmemb, size_t size, compare_fn_t *cmp);
+/*
  * heapq end
  */
 
+/*
+ * linkedlist
+ */
+
+typedef struct linkedlist_t LinkedList;
+typedef struct linkedlist_item_t LinkedListItem;
+
+struct linkedlist_item_t {
+    void *data; // pointer to the data. we don't manage the memory of this.
+    struct linkedlist_item_t *prev; // can be NULL
+    struct linkedlist_item_t *next; // can be NULL
+};
+
+/*
+ * Doubly linked list implementation.
+ * Assumes all data that is stored has the same length.
+ */
+struct linkedlist_t {
+    struct linkedlist_item_t *head;
+    struct linkedlist_item_t *tail;
+    size_t size; // for convenience
+    u32 T_size; // sizeof the value that data in linkedlist_item_t points to
+};
+
+/* functions */
+
+/*
+ * Same as `struct linkedlist_t ll = { .head = NULL, .tail = NULL, . size = 0, .T_size = T_size }`
+ */
+void linkedlist_init(struct linkedlist_t *ll, u32 T_size);
+
+/*
+ * Frees all the connected items in the linkedlist.
+ */
+void linkedlist_free(struct linkedlist_t *ll);
+
+/*
+ * Appends a new item to the end
+ */
+void linkedlist_append(struct linkedlist_t *ll, void *data);
+
+/*
+ * Removes the first occurence of data.
+ * Uses nicc_data_eq() from common.c under the hood.
+ */
+bool linkedlist_remove(struct linkedlist_t *ll, void *data);
+/*
+ * Removes the item at given index.
+ */
+bool linkedlist_remove_idx(struct linkedlist_t *ll, size_t idx);
+
+/*
+ * Prints the data pointers of every item.
+ */
+void linkedlist_print(struct linkedlist_t *ll);
+
+/* 
+ * Simple for-each macro
+ */
+#define NICC_LL_FOR_EACH(ll, item) for (item = (ll)->head; item != NULL; item = item->next)
+/*
+ * linkedlist end
+ */
 
 #endif /* NICC_NICC_H */
 
 #ifdef NICC_IMPLEMENTATION
 #       define NICC_ARRAYLIST_IMPLEMENTATION
-#       define NICC_HT_IMPLEMENTATION
 #       define NICC_STACK_IMPLEMENTATION
 #       define NICC_HEAPQ_IMPLEMENTATION
 #       define NICC_HASHMAP_IMPLEMENTATION
+#       define NICC_LINKEDLIST_IMPLEMENTATION
 #endif
 
 #if defined NICC_IMPLEMENTATION || defined NICC_ARRAYLIST_IMPLEMENTATION || \
-    defined NICC_HT_IMPLEMENTATION || defined NICC_STACK_IMPLEMENTATION || \
-    defined NICC_HEAPQ_IMPLEMENTATION || defined NICC_HASHMAP_IMPLEMENTATION
+    defined NICC_STACK_IMPLEMENTATION || defined NICC_HEAPQ_IMPLEMENTATION || \
+    defined NICC_HASHMAP_IMPLEMENTATION || defined NICC_LINKEDLIST_IMPLEMENTATION
 
-/* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size)
 {
     void *res = realloc(ptr, new_size);
-    //TODO: better error handling
+    // TODO: better error handling
     if (res == NULL)
-        exit(1);
+	exit(1);
 
     return res;
 }
 
-#endif /* any implementation */
+bool nicc_data_eq(void *a, void *b, u32 T_size)
+{
+    /* bytewise comparison */
+    u8 A;
+    u8 B;
+    for (size_t i = 0; i < (size_t)T_size; i++) {
+        A = ((u8 *)a)[i];
+        B = ((u8 *)b)[i];
+        if (A != B)
+            return false;
+    }
+    return true;
+}
 
+
+#endif /* any implementation / common.c */
 
 #ifdef NICC_HASHMAP_IMPLEMENTATION
-/* return codes for insert() function */
-#define _HM_FULL 1
-#define _HM_OVERRIDE 2
-#define _HM_SUCCESS 3
 
 static u32 hash_func_m(void *data, u32 size)
 {
@@ -410,7 +516,7 @@ void hashmap_init(struct hashmap_t *map)
     map->size_log2 = HM_STARTING_BUCKETS_LOG2;
 
     int n_buckets = N_BUCKETS(map->size_log2);
-    map->buckets = malloc(sizeof(struct hm_bucket_t) * n_buckets);
+    map->buckets = calloc(sizeof(struct hm_bucket_t), n_buckets);
     for (int i = 0; i < n_buckets; i++) {
 	struct hm_bucket_t *bucket = &map->buckets[i];
 	/* set all entries to NULL */
@@ -455,7 +561,6 @@ void hashmap_free(struct hashmap_t *map)
 }
 
 #endif /* NICC_HASHMAP_IMPLEMENTATION */
-
 
 #ifdef NICC_ARRAYLIST_IMPLEMENTATION
 
@@ -549,6 +654,19 @@ void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
     arraylist_rm(arr, arr->size - 1);
 }
 
+size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
+{
+    if (val == NULL)
+	return NICC_NOT_FOUND;
+    for (size_t i = 0; i < arr->size; i++) {
+	if (eq(get_element(arr, i), val)) {
+	    return i;
+	}
+    }
+
+    return NICC_NOT_FOUND;
+}
+
 bool arraylist_rm(struct arraylist_t *arr, size_t idx)
 {
     if (idx > arr->size)
@@ -561,42 +679,45 @@ bool arraylist_rm(struct arraylist_t *arr, size_t idx)
     return true;
 }
 
-static bool element_eq(void *a, void *b, size_t size)
+bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 {
-    // TODO: using int here would be faster I think
-    // TODO: this is broken idk why
-    u8 *A = a;
-    u8 *B = b;
+    if (val == NULL)
+	return false;
 
-    for (size_t i = 0; i < size; i++) {
-	if (A[i] != B[i])
-	    return false;
-    }
-    return true;
-}
-
-bool arraylist_rmv(struct arraylist_t *arr, void *val)
-{
     for (size_t i = 0; i < arr->size; i++) {
-	if (element_eq(get_element(arr, i), val, arr->T_size))
+	if (eq(get_element(arr, i), val)) {
 	    return arraylist_rm(arr, i);
+	}
     }
+
     return false;
 }
 
-#endif /* NICC_ARRAYLIST_IMPLEMENTATION */
+bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp)
+{
+    if (arr->size == 0)
+	return false;
 
+    if (arr->size == 1)
+	return true;
+
+    qsort(arr->data, arr->size, arr->T_size, cmp);
+    return true;
+}
+
+#endif /* NICC_ARRAYLIST_IMPLEMENTATION */
 
 #ifdef NICC_HEAPQ_IMPLEMENTATION
 
 #define HEAPQ_STARTING_CAPACITY 32
 
-#define heapq_left_child_idx(parent_idx) (parent_idx * 2 + 1)
-#define heapq_right_child_idx(parent_idx) (parent_idx * 2 + 2)
-#define heapq_parent_idx(child_idx) ((child_idx - 1) / 2)
+#define heapq_left_child_idx(parent_idx) ((parent_idx << 1) + 1)
+#define heapq_right_child_idx(parent_idx) ((parent_idx + 1) << 1)
+#define heapq_parent_idx(child_idx) ((child_idx - 1) >> 1)
 
 #define heapq_has_left(idx, size) (heapq_left_child_idx(idx) < size)
-#define heapq_has_right(idx, size) (heapq_right_child_idx(idx) < size
+#define heapq_has_right(idx, size) (heapq_right_child_idx(idx) < size)
+
 
 static inline void *heapq_left_child(struct heapq_t *hq, int idx)
 {
@@ -625,7 +746,7 @@ static void heapify_up(struct heapq_t *hq)
     int idx = hq->size - 1;
     int parent_idx = heapq_parent_idx(idx);
     /* keep "repearing" heap as long as parent is greater than child */
-    while (parent_idx >= 0 && hq->cmp(hq->items[parent_idx], hq->items[idx])) {
+    while (parent_idx >= 0 && hq->cmp(hq->items[parent_idx], hq->items[idx]) > 0) {
 	heapq_swap(hq, parent_idx, idx);
 	/* walk upwards */
 	idx = heapq_parent_idx(idx);
@@ -640,10 +761,10 @@ static void heapify_down(struct heapq_t *hq)
     while (heapq_has_left(idx, hq->size)) {
 	min_idx = heapq_left_child_idx(idx);
 	if (heapq_has_right(idx, hq->size) &&
-	    hq->cmp(hq->items[min_idx], heapq_right_child(hq, idx))))
-            min_idx = heapq_right_child_idx(idx);
+	    hq->cmp(hq->items[min_idx], heapq_right_child(hq, idx)) > 0)
+	    min_idx = heapq_right_child_idx(idx);
 
-	if (hq->cmp(hq->items[min_idx], hq->items[idx])) {
+	if (hq->cmp(hq->items[min_idx], hq->items[idx]) > 0) {
 	    break;
 	} else {
 	    heapq_swap(hq, idx, min_idx);
@@ -684,17 +805,155 @@ void heapq_push(struct heapq_t *hq, void *item)
 void heapq_free(struct heapq_t *hq)
 {
     free(hq->items);
-    free(hq);
 }
 
-struct heapq_t *heapq_alloc(nicc_hq_compare_func *cmp)
+void heapq_init(struct heapq_t *hq, compare_fn_t *cmp)
 {
-    struct heapq_t *hq = malloc(sizeof(struct heapq_t));
     hq->size = 0;
     hq->capacity = HEAPQ_STARTING_CAPACITY;
     hq->items = malloc(hq->capacity * sizeof(void *));
     hq->cmp = cmp;
-    return hq;
+}
+
+static void heap_sort_internal(u8 *left, u8 *right, size_t size, compare_fn_t cmp)
+{
+    struct heapq_t heap;
+    heapq_init(&heap, cmp);
+
+    u8 *p = left;
+    u8 elems[(right - left) / size][size];
+    u32 i = 0;
+    while (p <= right) {
+	memcpy(*(elems + i), p, size);
+	heapq_push(&heap, *(elems + i++));
+	p += size;
+    }
+
+    p = right;
+
+    while (p >= left) {
+	u8 *elem = (u8 *)heapq_pop(&heap);
+	BYTE_SWAP(p, elem, size);
+	p -= size;
+    }
+
+    heapq_free(&heap);
+}
+
+void heap_sort(const void *base, size_t nmemb, size_t size, compare_fn_t cmp)
+{
+    if (!nmemb)
+	return;
+
+    u8 *base_ptr = (u8 *)base;
+    u8 *left_ptr = base_ptr;
+    u8 *right_ptr = base_ptr + size * (nmemb - 1);
+    heap_sort_internal(left_ptr, right_ptr, size, cmp);
 }
 
 #endif /* NICC_HEAPQ_IMPLEMENTATION */
+
+#ifdef NICC_LINKEDLIST_IMPLEMENTATION
+
+void linkedlist_init(struct linkedlist_t *ll, u32 T_size)
+{
+    ll->size = 0;
+    ll->head = NULL;
+    ll->tail = NULL;
+    ll->T_size = T_size;
+}
+
+void linkedlist_free(struct linkedlist_t *ll)
+{
+    struct linkedlist_item_t *next = ll->head;
+    while (next != NULL) {
+        struct linkedlist_item_t *this = next;
+        next = next->next;
+        free(this);
+    }
+}
+
+void linkedlist_append(struct linkedlist_t *ll, void *data)
+{
+    ll->size++;
+
+    struct linkedlist_item_t *item = malloc(sizeof(struct linkedlist_item_t));
+    item->data = data;
+    item->prev = NULL;
+    item->next = NULL;
+
+    /* base case where ll is empty */
+    if (ll->head == NULL) {
+        ll->head = item;
+        ll->tail = ll->head;
+        return;
+    }
+
+    struct linkedlist_item_t *old_tail = ll->tail;
+    item->prev = old_tail;
+    old_tail->next = item;
+    ll->tail = item;
+}
+
+static void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *to_remove)
+{
+    struct linkedlist_item_t *prev_item = to_remove->prev;
+    struct linkedlist_item_t *next_item = to_remove->next;
+
+    if (prev_item != NULL) {
+        prev_item->next = next_item;
+    } else {
+        /* prev is NULL -> this is the new head */
+        ll->head = next_item;
+    }
+
+    if (next_item != NULL) {
+        next_item->prev = prev_item;
+    } else {
+        /* tail is NULL -> this is the new tail */
+        ll->tail = next_item;
+    }
+
+    free(to_remove);
+}
+
+bool linkedlist_remove_idx(struct linkedlist_t *ll, size_t idx)
+{
+    if (idx > ll->size)
+        return false;
+
+    size_t i = 0;
+    for (struct linkedlist_item_t *item = ll->head; item != NULL; item = item->next) {
+        if (i == idx) {
+            linkedlist_remove_item(ll, item);
+            ll->size--;
+            return true;
+        }
+        i++;
+    }
+
+    /* should not be reached */
+    return false;
+}
+
+bool linkedlist_remove(struct linkedlist_t *ll, void *data)
+{
+    for (struct linkedlist_item_t *item = ll->head; item != NULL; item = item->next) {
+        if (nicc_data_eq(item->data, data, ll->T_size)) {
+            linkedlist_remove_item(ll, item);
+            ll->size--;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void linkedlist_print(struct linkedlist_t *ll)
+{
+    for (struct linkedlist_item_t *item = ll->head; item != NULL; item = item->next) {
+        printf("%p\n", item->data);
+    }
+}
+
+#endif /* NICC_LINKEDLIST_IMPLEMENTATION */
