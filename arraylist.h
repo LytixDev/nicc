@@ -44,41 +44,10 @@ void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
 void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
 size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
-size_t arraylist_index_of_r(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 
 bool arraylist_rm(struct arraylist_t *arr, size_t idx);
 bool arraylist_rmv(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 
 bool arraylist_sort(struct arraylist_t *arr, compare_fn_t *cmp);
 
-///*
-// * appends the given value parameter to the end of the array.
-// * automatically allocates more space in the array if necessary.
-// */
-// void arraylist_append(struct arraylist_t *da, void *val);
-///*
-// * adds the given value parameter to the given index parameter position.
-// */
-// void arraylist_set(struct arraylist_t *da, void *val, size_t idx);
-///*
-// * removes the value stored at the given index and shifts the
-// * values to the right one down.
-// */
-// bool arraylist_rm(struct arraylist_t *da, size_t idx);
-//
-///*
-// * removes the given value parameter from the list if it is found
-// * NOTE: you can only use this function if all the elements no less than the
-// given size parameter
-// */
-// bool arraylist_rmv(struct arraylist_t *da, void *val, size_t size);
-///*
-// * removes and returns the last value stored in the array
-// */
-// void *arraylist_pop(struct arraylist_t *da);
-// void *arraylist_get(struct arraylist_t *da, size_t idx);
-// size_t arraylist_get_size(struct arraylist_t *da);
-//
-// void **arraylist_raw_ret(struct arraylist_t *da);
-//
 #endif /* NICC_ARRAYLIST_H */

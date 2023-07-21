@@ -44,9 +44,12 @@
 /* internal function definitions */
 void *nicc_internal_realloc(void *ptr, size_t new_size);
 
+bool nicc_data_eq(void *a, void *b, u32 T_size);
+
 typedef i32 compare_fn_t(const void *, const void *);
 
 typedef bool equality_fn_t(const void *, const void *);
+
 
 #define BYTE_SWAP(a, b, size)                    \
     do {                                         \

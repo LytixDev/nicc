@@ -221,7 +221,7 @@ void hashmap_init(struct hashmap_t *map)
     map->size_log2 = HM_STARTING_BUCKETS_LOG2;
 
     int n_buckets = N_BUCKETS(map->size_log2);
-    map->buckets = malloc(sizeof(struct hm_bucket_t) * n_buckets);
+    map->buckets = calloc(sizeof(struct hm_bucket_t), n_buckets);
     for (int i = 0; i < n_buckets; i++) {
 	struct hm_bucket_t *bucket = &map->buckets[i];
 	/* set all entries to NULL */
