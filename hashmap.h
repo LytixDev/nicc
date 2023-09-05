@@ -95,4 +95,16 @@ void *hashmap_get(struct hashmap_t *map, void *key, u32 key_size);
 bool hashmap_rm(struct hashmap_t *map, void *key, u32 key_size);
 #define hashmap_srm(map, key) hashmap_rm(map, key, (strlen(key) + 1) * sizeof(char))
 
+/*
+ * The length of return_ptr must be at least sizeof(void *) * map->len bytes.
+ * Anything less becomes UB.
+ */
+void hashmap_get_values(struct hashmap_t *map, void **return_ptr);
+
+/*
+ * The length of return_ptr must be at least sizeof(void *) * map->len bytes.
+ * Anything less becomes UB.
+ */
+void hashmap_get_keys(struct hashmap_t *map, void **return_ptr);
+
 #endif /* NICC_HASHMAP_H */

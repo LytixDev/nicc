@@ -264,3 +264,39 @@ void hashmap_free(struct hashmap_t *map)
 
     free(map->buckets);
 }
+
+void hashmap_get_values(struct hashmap_t *map, void **return_ptr)
+{
+    size_t count = 0;
+
+    for (int i = 0; i < N_BUCKETS(map->size_log2); i++) {
+        struct hm_bucket_t *bucket = &map->buckets[i];
+        for (int j = 0; j < HM_BUCKET_SIZE; j++) {
+            struct hm_entry_t entry = bucket->entries[j];
+            if (entry.key == NULL)
+        	continue;
+
+            return_ptr[count++] = entry.value;
+            if (count == map->len)
+                return;
+        }
+    }
+}
+
+void hashmap_get_keys(struct hashmap_t *map, void **return_ptr)
+{
+    size_t count = 0;
+
+    for (int i = 0; i < N_BUCKETS(map->size_log2); i++) {
+        struct hm_bucket_t *bucket = &map->buckets[i];
+        for (int j = 0; j < HM_BUCKET_SIZE; j++) {
+            struct hm_entry_t entry = bucket->entries[j];
+            if (entry.key == NULL)
+        	continue;
+
+            return_ptr[count++] = entry.key;
+            if (count == map->len)
+                return;
+        }
+    }
+}
