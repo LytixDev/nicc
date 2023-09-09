@@ -25,6 +25,7 @@ typedef struct {
     double b;
 } Tuple;
 
+
 bool tuple_eq(Tuple *a, Tuple *b)
 {
     return a->a == b->a && a->b == b->b;
@@ -36,7 +37,7 @@ void foo(struct hashmap_t *map)
     hashmap_ssput(map, "key", "value", true);
 }
 
-void test_get_values_and_keys()
+void test_get_values_and_keys(void)
 {
     struct hashmap_t map;
     hashmap_init(&map);
@@ -77,9 +78,38 @@ void test_get_values_and_keys()
     hashmap_free(&map);
 }
 
-int main()
+void test_map_holds_pointers(void)
+{
+    struct hashmap_t map;
+    hashmap_init(&map);
+
+    Tuple a = { .a = 1, .b = 1.1 };
+    Tuple b = { .a = 2, .b = 1.2 };
+    Tuple c = { .a = 3, .b = 1.3 };
+    /* holds pointers instead of copying the data */
+    hashmap_sput(&map, "key1", &a, sizeof(Tuple *), false);
+    hashmap_sput(&map, "key2", &b, sizeof(Tuple *), false);
+    hashmap_sput(&map, "key3", &c, sizeof(Tuple *), false);
+
+    Tuple **ret_ptr = malloc(sizeof(Tuple *) * map.len);
+    hashmap_get_values(&map, (void **)ret_ptr);
+
+    Tuple *A = ret_ptr[0];
+    Tuple *B = ret_ptr[1];
+    Tuple *C = ret_ptr[2];
+
+    assert(tuple_eq(A, &a) == true);
+    assert(tuple_eq(B, &b) == true);
+    assert(tuple_eq(C, &c) == true);
+
+    free(ret_ptr);
+    hashmap_free(&map);
+}
+
+int main(void)
 {
     test_get_values_and_keys();
+    test_map_holds_pointers();
 
     struct hashmap_t map;
     hashmap_init(&map);
