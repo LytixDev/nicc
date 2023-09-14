@@ -62,7 +62,7 @@ void linkedlist_append(struct linkedlist_t *ll, void *data)
     ll->tail = item;
 }
 
-static void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *to_remove)
+void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *to_remove)
 {
     struct linkedlist_item_t *prev_item = to_remove->prev;
     struct linkedlist_item_t *next_item = to_remove->next;

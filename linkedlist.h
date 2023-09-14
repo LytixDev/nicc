@@ -62,6 +62,11 @@ void linkedlist_free(struct linkedlist_t *ll);
 void linkedlist_append(struct linkedlist_t *ll, void *data);
 
 /*
+ * Removes the provided item and updates underlying linkedlist container if needed.
+ */
+void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *to_remove);
+
+/*
  * Removes the first occurence of data.
  * Uses nicc_data_eq() from common.c under the hood.
  */
