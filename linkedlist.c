@@ -64,6 +64,7 @@ void linkedlist_append(struct linkedlist_t *ll, void *data)
 
 void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *to_remove)
 {
+    ll->size--;
     struct linkedlist_item_t *prev_item = to_remove->prev;
     struct linkedlist_item_t *next_item = to_remove->next;
 
@@ -78,7 +79,7 @@ void linkedlist_remove_item(struct linkedlist_t *ll, struct linkedlist_item_t *t
         next_item->prev = prev_item;
     } else {
         /* tail is NULL -> this is the new tail */
-        ll->tail = next_item;
+        ll->tail = prev_item;
     }
 
     free(to_remove);
@@ -93,7 +94,6 @@ bool linkedlist_remove_idx(struct linkedlist_t *ll, size_t idx)
     for (struct linkedlist_item_t *item = ll->head; item != NULL; item = item->next) {
         if (i == idx) {
             linkedlist_remove_item(ll, item);
-            ll->size--;
             return true;
         }
         i++;
@@ -108,7 +108,6 @@ bool linkedlist_remove(struct linkedlist_t *ll, void *data)
     for (struct linkedlist_item_t *item = ll->head; item != NULL; item = item->next) {
         if (nicc_data_eq(item->data, data, ll->T_size)) {
             linkedlist_remove_item(ll, item);
-            ll->size--;
             return true;
         }
     }
