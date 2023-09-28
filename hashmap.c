@@ -118,6 +118,8 @@ static struct hm_entry_t *get_from_bucket(struct hm_bucket_t *bucket, void *key,
     struct hm_entry_t entry;
     for (u8 i = 0; i < HM_BUCKET_SIZE; i++) {
 	entry = bucket->entries[i];
+        if (entry.key == NULL)
+            continue;
 	if (key_size == entry.key_size && hash_extra == entry.hash_extra) {
 	    // TODO: instead of memcmp, use a function that exits if a byte is not
 	    // equal
