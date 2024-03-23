@@ -93,7 +93,8 @@ bool arraylist_append(struct arraylist_t *arr, void *val);
 
 void *arraylist_get(struct arraylist_t *arr, size_t idx);
 void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
-void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
+bool arraylist_pop(struct arraylist_t *arr);
+bool arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
 size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 
@@ -698,15 +699,20 @@ void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr)
     memcpy(return_ptr, element, arr->T_size);
 }
 
-void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
+bool arraylist_pop(struct arraylist_t *arr)
+{
+    return arraylist_rm(arr, arr->size - 1);
+}
+
+bool arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
 {
     if (arr->size == 0) {
 	return_ptr = NULL;
-	return;
+	return false;
     }
 
     arraylist_get_copy(arr, arr->size - 1, return_ptr);
-    arraylist_rm(arr, arr->size - 1);
+    return arraylist_rm(arr, arr->size - 1);
 }
 
 size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
@@ -724,7 +730,7 @@ size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
 
 bool arraylist_rm(struct arraylist_t *arr, size_t idx)
 {
-    if (idx > arr->size)
+    if (idx >= arr->size)
 	return false;
 
     for (size_t i = idx + 1; i < arr->size; i++)
