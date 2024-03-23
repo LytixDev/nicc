@@ -701,7 +701,11 @@ void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr)
 
 bool arraylist_pop(struct arraylist_t *arr)
 {
-    return arraylist_rm(arr, arr->size - 1);
+    if (arr->size == 0) {
+	return false;
+    }
+    arr->size--;
+    return true;
 }
 
 bool arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
@@ -712,7 +716,8 @@ bool arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr)
     }
 
     arraylist_get_copy(arr, arr->size - 1, return_ptr);
-    return arraylist_rm(arr, arr->size - 1);
+    arr->size--;
+    return true;
 }
 
 size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq)
