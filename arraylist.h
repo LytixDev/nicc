@@ -41,7 +41,8 @@ bool arraylist_append(struct arraylist_t *arr, void *val);
 
 void *arraylist_get(struct arraylist_t *arr, size_t idx);
 void arraylist_get_copy(struct arraylist_t *arr, size_t idx, void *return_ptr);
-void arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
+bool arraylist_pop(struct arraylist_t *arr);
+bool arraylist_pop_and_copy(struct arraylist_t *arr, void *return_ptr);
 
 size_t arraylist_index_of(struct arraylist_t *arr, void *val, equality_fn_t *eq);
 

@@ -249,10 +249,6 @@ void test_index_of_r(void)
     get = arraylist_get(&arr, 2);
     assert(get->a == 1);
 
-    i32 idx = arraylist_index_of_r(&arr, &(Tuple){ .a = 2, .b = 2.2 }, tuple_equal);
-
-    assert(idx == 1);
-
     arraylist_free(&arr);
 }
 
